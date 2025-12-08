@@ -161,50 +161,148 @@ AI, Artificial Intelligence, Machine Learning, Data, Google, Microsoft, Meta, NV
 
 ---
 
-## 📖 Development Roadmap
+## 📖 Development Roadmap & Action Plan
 
-### Phase 1: Collection (Week 5) ✅
-- RSS discovery and parsing
-- Content extraction
-- CSV validation output
+### Phase 1: Scraper Module Development ✅ (Current)
+**Goal:** Build robust scraper covering all conditions
 
-### Phase 2: Database Integration (Week 6)
-- Insert articles into database
-- Source/tag management
-- Deduplication logic
+#### Completed
+- [x] RSS feed discovery and parsing
+- [x] Content extraction with newspaper3k
+- [x] CSV validation output
+- [x] DB-ready fields (url_hash, full_content, matched_tags)
 
-### Phase 3: AI Scoring (Week 7)
-- Local LLM integration
-- Significance scoring
-- Quality filtering
+#### In Progress
+- [ ] **Develop HTML scraper fallback** (when RSS unavailable)
+- [ ] **Handle edge cases:**
+  - Paywalled content detection
+  - Login screen detection
+  - Rate limiting / anti-bot measures
+  - Timeout handling
+  - Malformed RSS feeds
+- [ ] **Test coverage:** RSS + HTML scraping across 10+ sources
 
-### Phase 4: Translation (Week 8)
-- Thai translation
-- Output formatting
-- Quality validation
-
-### Phase 5: UI (Week 9-10)
-- PyQt6 dashboard
-- Configuration screens
-- Results viewer
+#### Deliverable
+- Working scraper module (RSS + HTML)
+- Test results document
+- Knowledge sharing session with team
 
 ---
 
-## 🤝 Contributing
+### Phase 2: Database Integration & Testing (Next 2 Weeks)
+**Goal:** Connect scraper to database and validate end-to-end workflow
 
-This is an internship project for AIEAT. Contributors should:
+#### Week 6 Tasks
+- [ ] **Create database interaction layer**
+  - Insert articles into `articles_meta` and `article_content`
+  - Link tags via `article_tag_map` junction table
+  - Implement deduplication using `url_hash`
+  - Query sources and keywords from database
+- [ ] **Test scraper → database pipeline**
+  - Run scraper on 4 test sources
+  - Verify data integrity in database
+  - Test duplicate handling
+- [ ] **Convert notebook to production code**
+  - Extract logic to `app/services/scraper_service.py`
+  - Add logging and error handling
 
-1. Clone the repo
-2. Create a feature branch: `git checkout -b feature/your-feature`
-3. Make changes and test
-4. Commit with clear messages: `[Phase N] Description`
-5. Push and create pull request
+#### Week 7 Tasks
+- [ ] **Present scraped news in database**
+  - Query and display articles from DB
+  - Show statistics (article count, sources, keywords)
+  - Export sample data for review
+- [ ] **Prepare for LLM integration**
+  - Test Typhoon-Translate 1.5 model locally
+  - Design prompt templates for scoring
+  - Plan AI engine architecture
+
+#### Knowledge Sharing
+- [ ] Weekly presentation of sub-task completion
+- [ ] Share Jupyter/Colab notebooks with team
+- [ ] Document learnings and challenges
+- [ ] 2-week advance action plan for next phase
+
+---
+
+### Phase 3: AI Model Integration (Week 8-9)
+**Goal:** Implement local LLM for article scoring and translation
+
+#### Tasks
+- [ ] **Try LLM model (Typhoon-Translate 1.5)**
+  - Load model using ctransformers
+  - Test inference speed and quality
+  - Optimize for CPU execution
+- [ ] **Implement scoring engine**
+  - Design scoring prompt
+  - Score articles 1-5 based on significance
+  - Store scores in `articles_meta.ai_score`
+- [ ] **Implement translation**
+  - Translate top-scoring articles to Thai
+  - Store in `article_content.thai_content`
+  - Quality validation
+
+#### Deliverable
+- Working AI engine
+- Sample scored and translated articles
+- Performance benchmarks
+
+---
+
+### Phase 4: UI Development (Week 10-11)
+**Goal:** Build PyQt6 desktop application
+
+#### Tasks
+- [ ] Dashboard screen (3-pane layout)
+- [ ] Configuration screens (sources, keywords, settings)
+- [ ] News reader with Thai translation view
+- [ ] Control bar (start/stop scraper, model selection)
+
+---
+
+### Phase 5: Integration & Testing (Week 12)
+**Goal:** End-to-end system testing and deployment
+
+#### Tasks
+- [ ] Full pipeline integration test
+- [ ] User acceptance testing
+- [ ] Documentation finalization
+- [ ] Packaging with PyInstaller
+
+---
+
+## 🤝 Contributing & Collaboration
+
+This is an internship project for AIEAT. Contributors should follow this workflow:
+
+### Weekly Workflow
+1. **Complete assigned sub-task** for the week
+2. **Test thoroughly** and document results
+3. **Share knowledge** with team via:
+   - Jupyter notebooks with explanations
+   - Google Colab links for testing
+   - Group presentation of completed work
+4. **Plan 2 weeks ahead** in each presentation
+5. **Commit to repo** with clear messages
+
+### Git Workflow
+1. Clone the repo: `git clone https://github.com/YOUR_USERNAME/AIEAT_Internship.git`
+2. Create feature branch: `git checkout -b feature/your-feature`
+3. Make changes and test locally
+4. Commit: `git commit -m "[Phase N] Description of changes"`
+5. Push: `git push origin feature/your-feature`
+6. Create pull request for team review
 
 ### Code Style
 - Follow PEP 8
 - Use type hints where applicable
 - Add docstrings to functions
 - Keep functions under 50 lines
+- Include unit tests for new features
+
+### Knowledge Sharing
+- **After each sub-task:** Share Colab/Jupyter pipeline with team
+- **Weekly presentations:** Demo completed work + plan next 2 weeks
+- **Documentation:** Update README with learnings and challenges
 
 ---
 
