@@ -18,20 +18,35 @@ A standalone desktop application that automates the complete workflow of gatheri
 
 ---
 
-## 📊 Current Status: Phase 1 Complete ✅
+## 📊 Current Status: Week 4-5 - Component 1: Web Scraping
 
-### ✅ Completed (Week 5)
+### ✅ Completed (Week 1-3: System Design Phase)
+- [x] **Week 1:** Research and requirements gathering
+- [x] **Week 2:** System architecture, database schema (11 tables), UX/UI design
+- [x] **Week 3:** Functional design and component planning
+
+### ✅ Completed (Week 4-5: Component 1 - Part 1)
 - [x] RSS feed discovery and parsing
 - [x] Content extraction with newspaper3k
 - [x] Keyword matching and filtering
-- [x] Database schema design (11 tables)
+- [x] Database implementation (11 tables)
 - [x] CSV output for validation
 - [x] DB-ready fields (url_hash, full_content, matched_tags, status)
 
-### 🚧 Next Phase (Week 6)
-- [ ] Database integration (insert articles)
-- [ ] AI scoring engine implementation
-- [ ] Convert notebook to production code (`scraper_service.py`)
+### 🎯 This Week (Week 5 - Component 1 Completion)
+- [ ] **Complete Scraper Module** — HTML fallback, RSS coverage, all edge cases
+- [ ] **Database Integration** — Scraper-to-DB interaction and testing
+- [ ] **Knowledge Sharing** — Document pipeline in Colab/Jupyter for team
+- [ ] **Data Pipeline** — Scrape → DB → Present workflow
+- [ ] **LLM Model Testing** — Test Typhoon-Translate locally
+- [ ] **Planning** — Action plan for Component 2-3 (next 2 weeks)
+
+### 🚧 Upcoming Components (Week 6-9)
+- **Week 5-6:** Component 2 - Data Processing and Annotation
+- **Week 6-8:** Component 3 - Training / Fine Tuning (AI scoring & translation)
+- **Week 9:** Component 4 - Merge to Product in Docker
+- **Week 10:** Component 5 - GitHub upload + installation guideline
+
 
 ---
 
@@ -161,148 +176,128 @@ AI, Artificial Intelligence, Machine Learning, Data, Google, Microsoft, Meta, NV
 
 ---
 
-## 📖 Development Roadmap & Action Plan
+## 📖 Development Roadmap (15-Week Timeline)
 
-### Phase 1: Scraper Module Development ✅ (Current)
-**Goal:** Build robust scraper covering all conditions
+### ✅ Week 1: System Design - Research
+- Project charter and requirements
+- Technology stack selection
 
-#### Completed
-- [x] RSS feed discovery and parsing
-- [x] Content extraction with newspaper3k
-- [x] CSV validation output
-- [x] DB-ready fields (url_hash, full_content, matched_tags)
+### ✅ Week 2: System Design - Architecture
+- System architecture design
+- Database schema (11 tables)
+- UX/UI mockups (6 screens)
 
-#### In Progress
-- [ ] **Develop HTML scraper fallback** (when RSS unavailable)
-- [ ] **Handle edge cases:**
-  - Paywalled content detection
-  - Login screen detection
-  - Rate limiting / anti-bot measures
-  - Timeout handling
-  - Malformed RSS feeds
-- [ ] **Test coverage:** RSS + HTML scraping across 10+ sources
+### ✅ Week 3: System Design - Functional Design
+- Component specifications
+- Data flow diagrams
+- Integration planning
 
-#### Deliverable
-- Working scraper module (RSS + HTML)
-- Test results document
-- Knowledge sharing session with team
+### 🚧 Week 4-5: Component 1 - Web Scraping / Data Crawling
+- RSS feed discovery and parsing
+- HTML fallback scraper (if needed)
+- Content extraction (newspaper3k)
+- Database integration
+- **Current progress:** 70% complete
 
----
+### Week 5-6: Component 2 - Data Processing and Annotation
+- Clean and normalize scraped data
+- Keyword tagging and categorization
+- Data quality validation
 
-### Phase 2: Database Integration & Testing (Next 2 Weeks)
-**Goal:** Connect scraper to database and validate end-to-end workflow
+### Week 6-8: Component 3 - Training / Fine Tuning
+- AI scoring engine (Typhoon-Translate)
+- Thai translation pipeline
+- Model optimization
 
-#### Week 6 Tasks
-- [ ] **Create database interaction layer**
-  - Insert articles into `articles_meta` and `article_content`
-  - Link tags via `article_tag_map` junction table
-  - Implement deduplication using `url_hash`
-  - Query sources and keywords from database
-- [ ] **Test scraper → database pipeline**
-  - Run scraper on 4 test sources
-  - Verify data integrity in database
-  - Test duplicate handling
-- [ ] **Convert notebook to production code**
-  - Extract logic to `app/services/scraper_service.py`
-  - Add logging and error handling
+### Week 9: Component 4 - Merge to Product in Docker
+- Containerize application
+- Configuration management
+- Deployment testing
 
-#### Week 7 Tasks
-- [ ] **Present scraped news in database**
-  - Query and display articles from DB
-  - Show statistics (article count, sources, keywords)
-  - Export sample data for review
-- [ ] **Prepare for LLM integration**
-  - Test Typhoon-Translate 1.5 model locally
-  - Design prompt templates for scoring
-  - Plan AI engine architecture
+### Week 10: Component 5 - GitHub Upload + Installation Guideline
+- Code documentation
+- Installation guide
+- Unit testing
 
-#### Knowledge Sharing
-- [ ] Weekly presentation of sub-task completion
-- [ ] Share Jupyter/Colab notebooks with team
-- [ ] Document learnings and challenges
-- [ ] 2-week advance action plan for next phase
+### Week 10-11: User Acceptance Testing
+- End-to-end testing
+- Bug fixes and refinements
+- Performance optimization
 
----
+### Week 12: Documentation - GitHub & Installation
+- Complete technical documentation
+- User manual
+- API documentation
 
-### Phase 3: AI Model Integration (Week 8-9)
-**Goal:** Implement local LLM for article scoring and translation
+### Week 13-14: Documentation - Study Report
+- Project report writing
+- Results analysis
+- Lessons learned
 
-#### Tasks
-- [ ] **Try LLM model (Typhoon-Translate 1.5)**
-  - Load model using ctransformers
-  - Test inference speed and quality
-  - Optimize for CPU execution
-- [ ] **Implement scoring engine**
-  - Design scoring prompt
-  - Score articles 1-5 based on significance
-  - Store scores in `articles_meta.ai_score`
-- [ ] **Implement translation**
-  - Translate top-scoring articles to Thai
-  - Store in `article_content.thai_content`
-  - Quality validation
-
-#### Deliverable
-- Working AI engine
-- Sample scored and translated articles
-- Performance benchmarks
+### Week 14-15: Documentation - Study Presentation
+- Presentation preparation
+- Demo video
+- Final presentation
 
 ---
 
-### Phase 4: UI Development (Week 10-11)
-**Goal:** Build PyQt6 desktop application
+## 🧭 HTML Fallback Scraper Design (Post-RSS)
 
-#### Tasks
-- [ ] Dashboard screen (3-pane layout)
-- [ ] Configuration screens (sources, keywords, settings)
-- [ ] News reader with Thai translation view
-- [ ] Control bar (start/stop scraper, model selection)
+We already have RSS working. This section defines how we add a careful HTML fallback while staying privacy-first and lightweight.
+
+### What We Will Do
+- **Decision flow per source:** RSS → sitemap (from robots.txt) → shallow HTML crawl (front/section pages) → article extraction.
+- **Static HTTP only:** Use `requests` + `newspaper3k` (no external APIs; headless only if later approved).
+- **Polite, low-volume:** Few pages per domain, short timeouts, backoff on 429/403, normalized URLs for dedup.
+
+### What Usually Works
+- Server-rendered news sites (WordPress/typical media).
+- Sites exposing `sitemap.xml` via `robots.txt`.
+- AMP pages via `<link rel="amphtml">` when main page is noisy.
+
+### Likely Pain / Low ROI (for MVP)
+- Hard paywalls/login walls (content not in HTML).
+- Cloudflare/JS challenges (403/503 loops) without headless.
+- Heavy JS/infinite scroll with no discoverable JSON feed.
+
+### Crawl/Extract Heuristics
+- **Link filters:** Same-domain only; allow slugs with dates or `/news/`, `/article/`, `/story/`; block login/subscribe/tag/category/search/pdf/media.
+- **Caps:** Max ~5–10 seed pages per domain; max ~20 article links per seed; 3–5s timeout; retries=1.
+- **Content checks:** Use newspaper3k readability; if too short, try AMP or canonical `og:url`; keep full text for DB, snippet for preview.
+- **Metadata:** title, author(s), published (fallback now), url_hash, full_content, matched tags.
+
+### Logging & Failure Classes
+- Fetch error, parse error, paywall/login, JS-required, blocked (429/403), empty/too-short content.
+- Per-source stats: pages fetched, links found, articles kept, errors.
+
+### Implementation Plan
+1) Add decision flow to scraper: RSS → sitemap → shallow HTML crawl.
+2) Add robots.txt parse + sitemap fetch to seed URLs.
+3) Add link allow/deny heuristics and caps per domain.
+4) Keep politeness defaults (UA, timeout, backoff, low concurrency).
+5) Log categorized failures and per-source summary.
+6) Pilot on 2–3 non-RSS sources; refine heuristics before broadening.
+
+### Opt-In Headless (Later, if needed)
+- Only for specific blocked/JS sites, behind a feature flag, and kept minimal to preserve privacy/offline constraints.
 
 ---
 
-### Phase 5: Integration & Testing (Week 12)
-**Goal:** End-to-end system testing and deployment
+## 🤝 Contributing
 
-#### Tasks
-- [ ] Full pipeline integration test
-- [ ] User acceptance testing
-- [ ] Documentation finalization
-- [ ] Packaging with PyInstaller
+This is an internship project for AIEAT. Contributors should:
 
----
-
-## 🤝 Contributing & Collaboration
-
-This is an internship project for AIEAT. Contributors should follow this workflow:
-
-### Weekly Workflow
-1. **Complete assigned sub-task** for the week
-2. **Test thoroughly** and document results
-3. **Share knowledge** with team via:
-   - Jupyter notebooks with explanations
-   - Google Colab links for testing
-   - Group presentation of completed work
-4. **Plan 2 weeks ahead** in each presentation
-5. **Commit to repo** with clear messages
-
-### Git Workflow
-1. Clone the repo: `git clone https://github.com/YOUR_USERNAME/AIEAT_Internship.git`
-2. Create feature branch: `git checkout -b feature/your-feature`
-3. Make changes and test locally
-4. Commit: `git commit -m "[Phase N] Description of changes"`
-5. Push: `git push origin feature/your-feature`
-6. Create pull request for team review
+1. Clone the repo
+2. Create a feature branch: `git checkout -b feature/your-feature`
+3. Make changes and test
+4. Commit with clear messages: `[Phase N] Description`
+5. Push and create pull request
 
 ### Code Style
 - Follow PEP 8
 - Use type hints where applicable
 - Add docstrings to functions
 - Keep functions under 50 lines
-- Include unit tests for new features
-
-### Knowledge Sharing
-- **After each sub-task:** Share Colab/Jupyter pipeline with team
-- **Weekly presentations:** Demo completed work + plan next 2 weeks
-- **Documentation:** Update README with learnings and challenges
 
 ---
 
