@@ -1,0 +1,6 @@
+PyQt6
+feedparser
+newspaper3k
+ctransformers
+requests
+lxml_html_clean
