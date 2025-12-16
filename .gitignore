@@ -54,6 +54,7 @@ desktop.ini
 # Logs
 logs/
 *.log
+!v9_Scraper_Playwright/*.log
 
 # Environment variables
 .env

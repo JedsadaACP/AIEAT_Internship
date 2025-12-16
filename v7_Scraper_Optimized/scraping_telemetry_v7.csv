@@ -1,0 +1,51 @@
+source,success,method_used,articles_count,methods_tried,elapsed_seconds,url
+TechCrunch,True,rss,18,rss,8.2,https://techcrunch.com
+The Verge,True,rss,7,rss,6.1,https://www.theverge.com
+Ars Technica,True,rss,10,rss,14.8,https://arstechnica.com
+Wired,True,rss,6,rss,7.5,https://www.wired.com
+Engadget,True,rss,11,rss,18.6,https://www.engadget.com
+CNET,True,html,32,rss → api → html,52.1,https://www.cnet.com
+ZDNet,True,rss,15,rss,18.7,https://www.zdnet.com
+Mashable,True,rss,9,rss,17.9,https://mashable.com
+VentureBeat,True,rss,7,rss,4.3,https://venturebeat.com
+The Next Web,True,rss,2,rss,2.5,https://thenextweb.com
+TechRadar,True,rss,26,rss,55.9,https://www.techradar.com
+Tom's Hardware,True,html,12,rss → api → html,168.7,https://www.tomshardware.com
+AnandTech,False,,0,rss → api → html → homepage,145.5,https://www.anandtech.com
+Gizmodo,True,rss,5,rss,38.9,https://gizmodo.com
+Digital Trends,True,rss,19,rss,26.2,https://www.digitaltrends.com
+MIT Technology Review,True,rss,5,rss,13.6,https://www.technologyreview.com
+IEEE Spectrum,True,rss,18,rss,46.0,https://spectrum.ieee.org
+AI Business,False,,0,rss → api → html → homepage,41.4,https://aibusiness.com
+Analytics India Magazine,True,rss,14,rss,32.0,https://analyticsindiamag.com
+The AI Blog,True,homepage,16,rss → api → html → homepage,63.8,https://blogs.microsoft.com
+Google AI Blog,True,html,4,rss → api → html,68.0,https://ai.googleblog.com
+OpenAI Blog,False,,0,rss → api → html → homepage,35.3,https://openai.com
+Synced Review,False,,0,rss → api → html → homepage,63.2,https://syncedreview.com
+Marktechpost,False,,0,rss → api → html → homepage,63.2,https://www.marktechpost.com
+The Decoder,True,html,2,rss → api → html,112.3,https://the-decoder.com
+Bloomberg Technology,False,,0,rss → api → html → homepage,50.9,https://www.bloomberg.com
+Reuters Technology,False,,0,rss → api → html → homepage,8.5,https://www.reuters.com
+CNBC Tech,True,html,15,rss → api → html,64.2,https://www.cnbc.com
+Financial Times Tech,False,,0,rss → api → html → homepage,73.1,https://www.ft.com
+Wall Street Journal Tech,False,,0,rss → api → html → homepage,38.1,https://www.wsj.com
+Fortune Tech,True,rss,3,rss,3.3,https://fortune.com
+Forbes Tech,True,rss,1,rss,31.2,https://www.forbes.com
+Business Insider Tech,True,rss,11,rss,44.2,https://www.businessinsider.com
+Yahoo Finance Tech,True,html,18,rss → api → html,94.5,https://finance.yahoo.com
+Seeking Alpha Tech,True,rss,5,rss,30.1,https://seekingalpha.com
+BBC Technology,True,homepage,1,rss → api → html → homepage,95.3,https://www.bbc.com
+CNN Tech,True,html,2,rss → api → html,121.7,https://www.cnn.com
+The Guardian Tech,True,rss,7,rss,11.1,https://www.theguardian.com
+NY Times Tech,True,html,4,rss → api → html,36.6,https://www.nytimes.com
+Washington Post Tech,False,,0,rss → api → html → homepage,75.5,https://www.washingtonpost.com
+NPR Tech,True,html,2,rss → api → html,34.7,https://www.npr.org
+AP Tech,True,homepage,24,rss → api → html → homepage,79.2,https://apnews.com
+Axios Tech,False,,0,rss → api → html → homepage,18.5,https://www.axios.com
+The Atlantic Tech,True,homepage,13,rss → api → html → homepage,60.6,https://www.theatlantic.com
+Politico Tech,False,,0,rss → api → html → homepage,11.0,https://www.politico.com
+SemiAnalysis,False,,0,rss → api → html → homepage,47.0,https://www.semianalysis.com
+EE Times,False,,0,rss → api → html → homepage,97.2,https://www.eetimes.com
+Semiconductor Engineering,True,rss,8,rss,29.6,https://semiengineering.com
+CleanTechnica,True,rss,20,rss,8.7,https://cleantechnica.com
+Electrek,True,rss,22,rss,9.5,https://electrek.co

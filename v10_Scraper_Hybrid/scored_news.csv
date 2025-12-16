@@ -1,0 +1,41 @@
+news_id,url_hash,headline,A.I.,Google,Microsoft,Nvidia,Crypto,Chipset,Social_Impact,Economic_Impact,No_Ads,Has_Reference
+0,231ac019b44b645d0fbefe32d856de73,"Zencoder drops Zenflow, a free AI orchestration tool that pits Claude against OpenAI’s models to cat",1,1,1,0,0,0,0,0,1,0
+1,074a456b8a72ebeedd196f84a160ce38,Apple TV adds support for Google Cast even as Netflix ditches the feature,0,1,0,0,0,0,0,0,1,0
+2,a175e9242218816aad54c07f73622048,Echo raises $35M to secure the enterprise cloud's base layer — container images — with autonomous AI,1,0,0,0,0,0,0,0,1,0
+3,6a68b01f30bbf9c2c75b8a1cfe179a5e,"Is ChatGPT’s New Shopping Research Solving a Problem, or Creating One?",1,0,0,0,0,0,0,0,1,0
+4,4dc43cae86fec91848c48af20e5906cb,"With 91% accuracy, open source Hindsight agentic memory provides 20/20 vision for AI agents stuck on",1,0,0,0,0,0,0,0,1,0
+5,9485a7722e3c77c74cdb1e96f21e4721,Zoom says it aced AI’s hardest exam. Critics say it copied off its neighbors.,1,1,1,0,0,0,0,0,1,0
+6,6b24ab1f94a449ce726f97d4aaeb906e,Databricks raises $4B at $134B valuation as its AI business heats up,1,1,1,0,0,0,0,1,1,1
+7,ce093c7dea85ec4ae0d0542778d2d766,Black box AI isn’t enough: Why enterprise consulting is moving to grounded models,1,0,0,0,0,0,0,0,1,0
+8,c4cbf5014763841709c12bee24bceffb,"Adobe Firefly now supports prompt-based video editing, adds more third-party models",1,1,1,0,0,0,0,0,1,0
+9,f70df2cb6b9740cf349c3c9cf762a223,Tekpon acquires TNW (The Next Web) brand from The Financial Times,1,0,0,0,0,0,0,0,1,0
+10,2c0405c91e1ce8322bf8e04b61ab8629,Korean AI startup Motif reveals 4 big lessons for training enterprise LLMs,1,0,0,1,0,0,0,0,1,0
+11,9ddd7bb1abbfae2c2b0cef6b11261803,Nuclear startup Last Energy raises $100M for its steel-encased micro reactor,0,1,1,0,0,0,1,1,1,1
+12,cb0649961a7aaa9654bb9eeaeec644c9,Texas is suing all of the big TV makers for spying on what you watch,0,1,0,0,1,0,1,0,1,0
+13,0db92096950209e8416087472be06e01,Amazon’s Kindle Scribe Colorsoft won’t replace your notebook — or your Kindle,1,1,1,0,0,0,0,0,1,0
+14,95232da20d6187e74733c4f412eb2b19,Tokenization takes the lead in the fight for data security,1,0,0,0,1,0,0,0,1,0
+15,a5f21c3a88bb28475f0b7f2cd0baa008,Everbloom built an AI to turn chicken feathers into cashmere,1,1,1,0,0,0,0,0,1,0
+16,1f83ae677c5fb8e13feeeed03440ec45,Coffee Meets Bagel survey identifies top dating challenges,1,0,0,0,0,0,0,0,1,1
+17,4dc044ee2d2ef00adb7347d41981e27b,Fallout’s goofy apocalypse gets serious in season 2,1,0,0,0,0,0,0,0,1,0
+18,e209d68f1e8b9ddae3c1d758491273ba,Solo VC and Lovable investor Neil Murray raises third Nordic-focused fund,1,1,1,0,0,0,0,0,1,0
+19,ab18e46b6c507ba6a093910752ac116c,VCs discuss why most consumer AI startups still lack staying power,1,1,1,0,0,0,0,0,1,0
+20,91a6329fe561ad44db04b26cd9d4c90b,"'Fallout' Season 2 review: Our introduction to New Vegas is a blast, and more relevant than ever",0,1,0,0,0,0,0,0,1,0
+21,a1643d01d6a9e60b19a6e3fb5986ef4a,"9 Best Electric Scooters (2025), Tested and Reviewed",0,1,0,0,0,0,0,0,1,0
+22,6a2565aeb7e7a4fd323098f3f032c88e,2026 Mercedes CLA first drive: Entry level doesn’t mean basic,1,0,0,0,0,0,0,0,1,0
+23,86dbc4a9f84ac7a778c9a416a119b099,OpenAI-backed biotech firm Chai Discovery raises $130M Series B at $1.3B valuation,1,0,0,0,0,0,0,1,1,1
+24,96b6866f6b482c99ce5c19eac4f74e75,Racks of AI chips are too damn heavy,1,0,1,0,0,0,0,0,1,1
+25,ccc99739dfd50d10fafe362ffca624aa,Amazon is set to lay off 370 workers at its European HQ,1,0,0,0,0,0,1,1,1,1
+26,5e1ddff36da60670e859677082108a00,I hate that I love Riverside’s AI-driven ‘Rewind’ for podcasters,1,1,1,0,0,0,0,0,1,0
+27,84b370df86bc042b40d7260d28e06191,Aluminium OS: Everything We Know About the Chromebook Successor,0,1,0,0,0,0,0,0,1,0
+28,84f4fa6d944180422933f4c016e1b4a6,Mozilla’s new CEO is doubling down on an AI future for Firefox,1,1,0,0,0,0,1,0,1,1
+29,40cf56b7046b406c525812421759cf0d,Disney’s OpenAI deal is exclusive for just one year — then it’s open season,1,1,0,0,0,0,0,0,1,0
+30,ab3fcc62e9efaa30940f359fb037765b,AWS CEO Matt Garman Doesn’t Think AI Should Replace Junior Devs,1,0,0,0,0,0,0,0,1,0
+31,c7b5ddbffa5ccf26cbab2f44e6f0a6a2,Nvidia bulks up open source offerings with an acquisition and new open AI models,1,1,1,1,0,0,0,1,1,0
+32,9d44cd9f0966b6976af4d2d16d936547,Merriam-Webster’s word of the year delivers a dismissive verdict on junk AI content,1,0,0,0,0,0,1,0,1,1
+33,9ffd54fa64d17fbd959494c8227445d5,Aura Frame Sale (2025): From Aura Carver to Aura Ink,0,1,0,0,0,0,0,0,1,0
+34,ca8ce74e57e83e6e1fa286cc11a9b749,Ford is starting a battery storage business to power data centers and the grid,0,1,1,0,0,0,0,0,1,0
+35,6a2778b304769ea044abfc9146f50dfc,Ford’s next F-150 Lightning will have a gas generator as it pivots away from large EVs,0,1,1,0,0,0,1,1,1,1
+36,64144a0170c7b65724011983885bb817,Still running Windows 10? Here's why that's a bad idea,1,1,1,0,0,0,1,0,1,1
+37,70db50f5ee8ebb2353f452e8dc1d0e08,Microsoft will finally kill obsolete cipher that has wreaked decades of havoc,0,0,1,0,1,0,1,0,1,1
+38,da2c1e173aa158744e156d8444883aad,Creative Commons announces tentative support for AI ‘pay-to-crawl’ systems,1,1,1,0,0,0,0,0,1,0
+39,13160dc8236a2837e8c8e91b617daa34,Lightspeed raises record $9B in fresh capital,1,1,1,0,0,0,0,1,1,1

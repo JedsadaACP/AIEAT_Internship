@@ -1,0 +1,385 @@
+2025-12-15 17:59:40,492 | INFO | RSS used for VentureBeat
+2025-12-15 17:59:41,404 | INFO | RSS used for MIT Technology Review
+2025-12-15 17:59:41,404 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 17:59:41,404 | ERROR | empty HTML tree: None
+2025-12-15 17:59:41,404 | WARNING | discarding data: None
+2025-12-15 17:59:41,405 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 17:59:41,405 | ERROR | empty HTML tree: None
+2025-12-15 17:59:41,405 | WARNING | discarding data: None
+2025-12-15 17:59:41,405 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 17:59:41,405 | ERROR | empty HTML tree: None
+2025-12-15 17:59:41,405 | WARNING | discarding data: None
+2025-12-15 17:59:41,405 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 17:59:41,405 | ERROR | empty HTML tree: None
+2025-12-15 17:59:41,405 | WARNING | discarding data: None
+2025-12-15 17:59:41,406 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 17:59:41,406 | ERROR | empty HTML tree: None
+2025-12-15 17:59:41,406 | WARNING | discarding data: None
+2025-12-15 17:59:41,406 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 17:59:41,406 | ERROR | empty HTML tree: None
+2025-12-15 17:59:41,406 | WARNING | discarding data: None
+2025-12-15 17:59:41,406 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 17:59:41,406 | ERROR | empty HTML tree: None
+2025-12-15 17:59:41,406 | WARNING | discarding data: None
+2025-12-15 17:59:41,406 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 17:59:41,406 | ERROR | empty HTML tree: None
+2025-12-15 17:59:41,406 | WARNING | discarding data: None
+2025-12-15 17:59:41,407 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 17:59:41,407 | ERROR | empty HTML tree: None
+2025-12-15 17:59:41,407 | WARNING | discarding data: None
+2025-12-15 17:59:41,407 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 17:59:41,407 | ERROR | empty HTML tree: None
+2025-12-15 17:59:41,407 | WARNING | discarding data: None
+2025-12-15 17:59:42,728 | INFO | RSS used for The Next Web
+2025-12-15 17:59:49,073 | INFO | RSS used for Digital Trends
+2025-12-15 17:59:50,852 | INFO | RSS used for TechCrunch
+2025-12-15 17:59:50,852 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 17:59:50,852 | ERROR | empty HTML tree: None
+2025-12-15 17:59:50,852 | WARNING | discarding data: None
+2025-12-15 17:59:50,852 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 17:59:50,852 | ERROR | empty HTML tree: None
+2025-12-15 17:59:50,852 | WARNING | discarding data: None
+2025-12-15 17:59:50,852 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 17:59:50,852 | ERROR | empty HTML tree: None
+2025-12-15 17:59:50,852 | WARNING | discarding data: None
+2025-12-15 17:59:50,853 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 17:59:50,853 | ERROR | empty HTML tree: None
+2025-12-15 17:59:50,853 | WARNING | discarding data: None
+2025-12-15 17:59:50,853 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 17:59:50,853 | ERROR | empty HTML tree: None
+2025-12-15 17:59:50,853 | WARNING | discarding data: None
+2025-12-15 17:59:50,853 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 17:59:50,853 | ERROR | empty HTML tree: None
+2025-12-15 17:59:50,853 | WARNING | discarding data: None
+2025-12-15 17:59:50,854 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 17:59:50,854 | ERROR | empty HTML tree: None
+2025-12-15 17:59:50,854 | WARNING | discarding data: None
+2025-12-15 17:59:50,854 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 17:59:50,854 | ERROR | empty HTML tree: None
+2025-12-15 17:59:50,854 | WARNING | discarding data: None
+2025-12-15 17:59:50,854 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 17:59:50,854 | ERROR | empty HTML tree: None
+2025-12-15 17:59:50,854 | WARNING | discarding data: None
+2025-12-15 17:59:50,854 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 17:59:50,854 | ERROR | empty HTML tree: None
+2025-12-15 17:59:50,855 | WARNING | discarding data: None
+2025-12-15 17:59:52,585 | INFO | RSS used for The Verge
+2025-12-15 17:59:52,586 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 17:59:52,586 | ERROR | empty HTML tree: None
+2025-12-15 17:59:52,586 | WARNING | discarding data: None
+2025-12-15 17:59:52,586 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 17:59:52,586 | ERROR | empty HTML tree: None
+2025-12-15 17:59:52,586 | WARNING | discarding data: None
+2025-12-15 17:59:52,586 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 17:59:52,586 | ERROR | empty HTML tree: None
+2025-12-15 17:59:52,586 | WARNING | discarding data: None
+2025-12-15 17:59:52,586 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 17:59:52,586 | ERROR | empty HTML tree: None
+2025-12-15 17:59:52,586 | WARNING | discarding data: None
+2025-12-15 17:59:52,587 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 17:59:52,587 | ERROR | empty HTML tree: None
+2025-12-15 17:59:52,587 | WARNING | discarding data: None
+2025-12-15 17:59:52,587 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 17:59:52,587 | ERROR | empty HTML tree: None
+2025-12-15 17:59:52,587 | WARNING | discarding data: None
+2025-12-15 17:59:52,587 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 17:59:52,587 | ERROR | empty HTML tree: None
+2025-12-15 17:59:52,587 | WARNING | discarding data: None
+2025-12-15 17:59:52,587 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 17:59:52,587 | ERROR | empty HTML tree: None
+2025-12-15 17:59:52,587 | WARNING | discarding data: None
+2025-12-15 17:59:52,588 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 17:59:52,588 | ERROR | empty HTML tree: None
+2025-12-15 17:59:52,588 | WARNING | discarding data: None
+2025-12-15 17:59:52,588 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 17:59:52,588 | ERROR | empty HTML tree: None
+2025-12-15 17:59:52,588 | WARNING | discarding data: None
+2025-12-15 17:59:54,014 | INFO | RSS used for Analytics India Magazine
+2025-12-15 17:59:57,062 | INFO | RSS used for The AI Blog
+2025-12-15 17:59:58,677 | INFO | RSS used for IEEE Spectrum
+2025-12-15 18:00:00,555 | INFO | RSS used for Wired
+2025-12-15 18:00:00,555 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:00:00,555 | ERROR | empty HTML tree: None
+2025-12-15 18:00:00,555 | WARNING | discarding data: None
+2025-12-15 18:00:00,555 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:00:00,555 | ERROR | empty HTML tree: None
+2025-12-15 18:00:00,555 | WARNING | discarding data: None
+2025-12-15 18:00:00,556 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:00:00,556 | ERROR | empty HTML tree: None
+2025-12-15 18:00:00,556 | WARNING | discarding data: None
+2025-12-15 18:00:00,556 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:00:00,556 | ERROR | empty HTML tree: None
+2025-12-15 18:00:00,556 | WARNING | discarding data: None
+2025-12-15 18:00:00,556 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:00:00,556 | ERROR | empty HTML tree: None
+2025-12-15 18:00:00,556 | WARNING | discarding data: None
+2025-12-15 18:00:00,556 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:00:00,556 | ERROR | empty HTML tree: None
+2025-12-15 18:00:00,556 | WARNING | discarding data: None
+2025-12-15 18:00:00,557 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:00:00,557 | ERROR | empty HTML tree: None
+2025-12-15 18:00:00,557 | WARNING | discarding data: None
+2025-12-15 18:00:00,557 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:00:00,557 | ERROR | empty HTML tree: None
+2025-12-15 18:00:00,557 | WARNING | discarding data: None
+2025-12-15 18:00:00,557 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:00:00,557 | ERROR | empty HTML tree: None
+2025-12-15 18:00:00,557 | WARNING | discarding data: None
+2025-12-15 18:00:04,078 | INFO | RSS used for The Decoder
+2025-12-15 18:00:05,042 | INFO | RSS used for Synced Review
+2025-12-15 18:00:12,783 | INFO | RSS used for Engadget
+2025-12-15 18:00:18,005 | INFO | RSS failed for OpenAI Blog, using Playwright
+2025-12-15 18:00:18,683 | INFO | RSS failed for Reuters Technology, using Playwright
+2025-12-15 18:00:27,352 | INFO | RSS used for Fortune Tech
+2025-12-15 18:00:27,353 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:00:27,353 | ERROR | empty HTML tree: None
+2025-12-15 18:00:27,353 | WARNING | discarding data: None
+2025-12-15 18:00:27,353 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:00:27,353 | ERROR | empty HTML tree: None
+2025-12-15 18:00:27,353 | WARNING | discarding data: None
+2025-12-15 18:00:27,353 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:00:27,353 | ERROR | empty HTML tree: None
+2025-12-15 18:00:27,353 | WARNING | discarding data: None
+2025-12-15 18:00:27,353 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:00:27,353 | ERROR | empty HTML tree: None
+2025-12-15 18:00:27,353 | WARNING | discarding data: None
+2025-12-15 18:00:27,353 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:00:27,354 | ERROR | empty HTML tree: None
+2025-12-15 18:00:27,354 | WARNING | discarding data: None
+2025-12-15 18:00:27,354 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:00:27,354 | ERROR | empty HTML tree: None
+2025-12-15 18:00:27,354 | WARNING | discarding data: None
+2025-12-15 18:00:27,354 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:00:27,354 | ERROR | empty HTML tree: None
+2025-12-15 18:00:27,354 | WARNING | discarding data: None
+2025-12-15 18:00:27,354 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:00:27,354 | ERROR | empty HTML tree: None
+2025-12-15 18:00:27,354 | WARNING | discarding data: None
+2025-12-15 18:00:27,354 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:00:27,354 | ERROR | empty HTML tree: None
+2025-12-15 18:00:27,354 | WARNING | discarding data: None
+2025-12-15 18:00:27,355 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:00:27,355 | ERROR | empty HTML tree: None
+2025-12-15 18:00:27,355 | WARNING | discarding data: None
+2025-12-15 18:00:30,849 | INFO | RSS used for AI Business
+2025-12-15 18:00:30,849 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:00:30,850 | ERROR | empty HTML tree: None
+2025-12-15 18:00:30,850 | WARNING | discarding data: None
+2025-12-15 18:00:30,850 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:00:30,850 | ERROR | empty HTML tree: None
+2025-12-15 18:00:30,850 | WARNING | discarding data: None
+2025-12-15 18:00:30,850 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:00:30,850 | ERROR | empty HTML tree: None
+2025-12-15 18:00:30,850 | WARNING | discarding data: None
+2025-12-15 18:00:30,850 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:00:30,850 | ERROR | empty HTML tree: None
+2025-12-15 18:00:30,850 | WARNING | discarding data: None
+2025-12-15 18:00:30,851 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:00:30,851 | ERROR | empty HTML tree: None
+2025-12-15 18:00:30,851 | WARNING | discarding data: None
+2025-12-15 18:00:30,851 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:00:30,851 | ERROR | empty HTML tree: None
+2025-12-15 18:00:30,851 | WARNING | discarding data: None
+2025-12-15 18:00:30,851 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:00:30,851 | ERROR | empty HTML tree: None
+2025-12-15 18:00:30,851 | WARNING | discarding data: None
+2025-12-15 18:00:30,851 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:00:30,851 | ERROR | empty HTML tree: None
+2025-12-15 18:00:30,851 | WARNING | discarding data: None
+2025-12-15 18:00:30,851 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:00:30,851 | ERROR | empty HTML tree: None
+2025-12-15 18:00:30,851 | WARNING | discarding data: None
+2025-12-15 18:00:30,852 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:00:30,852 | ERROR | empty HTML tree: None
+2025-12-15 18:00:30,852 | WARNING | discarding data: None
+2025-12-15 18:00:32,944 | INFO | RSS used for Gizmodo
+2025-12-15 18:00:32,944 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:00:32,944 | ERROR | empty HTML tree: None
+2025-12-15 18:00:32,944 | WARNING | discarding data: None
+2025-12-15 18:00:32,944 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:00:32,944 | ERROR | empty HTML tree: None
+2025-12-15 18:00:32,944 | WARNING | discarding data: None
+2025-12-15 18:00:32,944 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:00:32,944 | ERROR | empty HTML tree: None
+2025-12-15 18:00:32,944 | WARNING | discarding data: None
+2025-12-15 18:00:32,945 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:00:32,945 | ERROR | empty HTML tree: None
+2025-12-15 18:00:32,945 | WARNING | discarding data: None
+2025-12-15 18:00:32,945 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:00:32,945 | ERROR | empty HTML tree: None
+2025-12-15 18:00:32,945 | WARNING | discarding data: None
+2025-12-15 18:00:32,945 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:00:32,945 | ERROR | empty HTML tree: None
+2025-12-15 18:00:32,945 | WARNING | discarding data: None
+2025-12-15 18:00:32,945 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:00:32,945 | ERROR | empty HTML tree: None
+2025-12-15 18:00:32,945 | WARNING | discarding data: None
+2025-12-15 18:00:32,945 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:00:32,945 | ERROR | empty HTML tree: None
+2025-12-15 18:00:32,946 | WARNING | discarding data: None
+2025-12-15 18:00:32,946 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:00:32,946 | ERROR | empty HTML tree: None
+2025-12-15 18:00:32,946 | WARNING | discarding data: None
+2025-12-15 18:00:33,985 | INFO | RSS failed for Bloomberg Technology, using Playwright
+2025-12-15 18:00:41,941 | INFO | RSS used for TechRadar
+2025-12-15 18:00:41,941 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:00:41,941 | ERROR | empty HTML tree: None
+2025-12-15 18:00:41,942 | WARNING | discarding data: None
+2025-12-15 18:00:41,942 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:00:41,942 | ERROR | empty HTML tree: None
+2025-12-15 18:00:41,942 | WARNING | discarding data: None
+2025-12-15 18:00:41,942 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:00:41,942 | ERROR | empty HTML tree: None
+2025-12-15 18:00:41,942 | WARNING | discarding data: None
+2025-12-15 18:00:41,942 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:00:41,942 | ERROR | empty HTML tree: None
+2025-12-15 18:00:41,942 | WARNING | discarding data: None
+2025-12-15 18:00:41,942 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:00:41,942 | ERROR | empty HTML tree: None
+2025-12-15 18:00:41,942 | WARNING | discarding data: None
+2025-12-15 18:00:41,943 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:00:41,943 | ERROR | empty HTML tree: None
+2025-12-15 18:00:41,943 | WARNING | discarding data: None
+2025-12-15 18:00:41,943 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:00:41,943 | ERROR | empty HTML tree: None
+2025-12-15 18:00:41,943 | WARNING | discarding data: None
+2025-12-15 18:00:41,943 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:00:41,943 | ERROR | empty HTML tree: None
+2025-12-15 18:00:41,943 | WARNING | discarding data: None
+2025-12-15 18:00:41,943 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:00:41,943 | ERROR | empty HTML tree: None
+2025-12-15 18:00:41,943 | WARNING | discarding data: None
+2025-12-15 18:00:41,944 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:00:41,944 | ERROR | empty HTML tree: None
+2025-12-15 18:00:41,944 | WARNING | discarding data: None
+2025-12-15 18:00:46,476 | INFO | RSS failed for Marktechpost, using Playwright
+2025-12-15 18:00:53,212 | INFO | RSS failed for Wall Street Journal Tech, using Playwright
+2025-12-15 18:01:00,171 | INFO | RSS used for ZDNet
+2025-12-15 18:01:00,171 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:01:00,171 | ERROR | empty HTML tree: None
+2025-12-15 18:01:00,171 | WARNING | discarding data: None
+2025-12-15 18:01:00,171 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:01:00,171 | ERROR | empty HTML tree: None
+2025-12-15 18:01:00,171 | WARNING | discarding data: None
+2025-12-15 18:01:00,171 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:01:00,171 | ERROR | empty HTML tree: None
+2025-12-15 18:01:00,171 | WARNING | discarding data: None
+2025-12-15 18:01:00,172 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:01:00,172 | ERROR | empty HTML tree: None
+2025-12-15 18:01:00,172 | WARNING | discarding data: None
+2025-12-15 18:01:00,172 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:01:00,172 | ERROR | empty HTML tree: None
+2025-12-15 18:01:00,172 | WARNING | discarding data: None
+2025-12-15 18:01:00,172 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:01:00,172 | ERROR | empty HTML tree: None
+2025-12-15 18:01:00,172 | WARNING | discarding data: None
+2025-12-15 18:01:00,172 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:01:00,172 | ERROR | empty HTML tree: None
+2025-12-15 18:01:00,172 | WARNING | discarding data: None
+2025-12-15 18:01:00,172 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:01:00,173 | ERROR | empty HTML tree: None
+2025-12-15 18:01:00,173 | WARNING | discarding data: None
+2025-12-15 18:01:00,173 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:01:00,173 | ERROR | empty HTML tree: None
+2025-12-15 18:01:00,173 | WARNING | discarding data: None
+2025-12-15 18:01:00,173 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:01:00,173 | ERROR | empty HTML tree: None
+2025-12-15 18:01:00,173 | WARNING | discarding data: None
+2025-12-15 18:01:11,141 | INFO | RSS failed for AnandTech, using Playwright
+2025-12-15 18:01:18,934 | INFO | RSS used for Business Insider Tech
+2025-12-15 18:01:18,934 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:01:18,934 | ERROR | empty HTML tree: None
+2025-12-15 18:01:18,934 | WARNING | discarding data: None
+2025-12-15 18:01:18,934 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:01:18,935 | ERROR | empty HTML tree: None
+2025-12-15 18:01:18,935 | WARNING | discarding data: None
+2025-12-15 18:01:18,935 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:01:18,935 | ERROR | empty HTML tree: None
+2025-12-15 18:01:18,935 | WARNING | discarding data: None
+2025-12-15 18:01:18,935 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:01:18,935 | ERROR | empty HTML tree: None
+2025-12-15 18:01:18,935 | WARNING | discarding data: None
+2025-12-15 18:01:18,935 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:01:18,935 | ERROR | empty HTML tree: None
+2025-12-15 18:01:18,935 | WARNING | discarding data: None
+2025-12-15 18:01:18,935 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:01:18,936 | ERROR | empty HTML tree: None
+2025-12-15 18:01:18,936 | WARNING | discarding data: None
+2025-12-15 18:01:18,936 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:01:18,936 | ERROR | empty HTML tree: None
+2025-12-15 18:01:18,936 | WARNING | discarding data: None
+2025-12-15 18:01:18,936 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:01:18,936 | ERROR | empty HTML tree: None
+2025-12-15 18:01:18,936 | WARNING | discarding data: None
+2025-12-15 18:01:18,936 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:01:18,936 | ERROR | empty HTML tree: None
+2025-12-15 18:01:18,936 | WARNING | discarding data: None
+2025-12-15 18:01:18,936 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:01:18,936 | ERROR | empty HTML tree: None
+2025-12-15 18:01:18,936 | WARNING | discarding data: None
+2025-12-15 18:01:22,679 | INFO | RSS failed for Forbes Tech, using Playwright
+2025-12-15 18:01:24,391 | INFO | RSS used for The Guardian Tech
+2025-12-15 18:01:33,895 | INFO | RSS failed for Google AI Blog, using Playwright
+2025-12-15 18:01:36,595 | INFO | RSS used for Mashable
+2025-12-15 18:01:36,596 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:01:36,596 | ERROR | empty HTML tree: None
+2025-12-15 18:01:36,596 | WARNING | discarding data: None
+2025-12-15 18:01:36,596 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:01:36,596 | ERROR | empty HTML tree: None
+2025-12-15 18:01:36,596 | WARNING | discarding data: None
+2025-12-15 18:01:36,596 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:01:36,596 | ERROR | empty HTML tree: None
+2025-12-15 18:01:36,596 | WARNING | discarding data: None
+2025-12-15 18:01:36,596 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:01:36,596 | ERROR | empty HTML tree: None
+2025-12-15 18:01:36,597 | WARNING | discarding data: None
+2025-12-15 18:01:36,597 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:01:36,597 | ERROR | empty HTML tree: None
+2025-12-15 18:01:36,597 | WARNING | discarding data: None
+2025-12-15 18:01:36,597 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:01:36,597 | ERROR | empty HTML tree: None
+2025-12-15 18:01:36,597 | WARNING | discarding data: None
+2025-12-15 18:01:36,597 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:01:36,597 | ERROR | empty HTML tree: None
+2025-12-15 18:01:36,597 | WARNING | discarding data: None
+2025-12-15 18:01:36,597 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:01:36,597 | ERROR | empty HTML tree: None
+2025-12-15 18:01:36,597 | WARNING | discarding data: None
+2025-12-15 18:01:36,598 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:01:36,598 | ERROR | empty HTML tree: None
+2025-12-15 18:01:36,598 | WARNING | discarding data: None
+2025-12-15 18:01:36,598 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:01:36,598 | ERROR | empty HTML tree: None
+2025-12-15 18:01:36,598 | WARNING | discarding data: None
+2025-12-15 18:01:39,472 | INFO | RSS failed for Axios Tech, using Playwright
+2025-12-15 18:01:47,468 | INFO | RSS used for SemiAnalysis
+2025-12-15 18:01:47,468 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:01:47,468 | ERROR | empty HTML tree: None
+2025-12-15 18:01:47,469 | WARNING | discarding data: None
+2025-12-15 18:01:47,469 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:01:47,469 | ERROR | empty HTML tree: None
+2025-12-15 18:01:47,469 | WARNING | discarding data: None
+2025-12-15 18:01:47,469 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:01:47,469 | ERROR | empty HTML tree: None
+2025-12-15 18:01:47,469 | WARNING | discarding data: None
+2025-12-15 18:01:47,469 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:01:47,469 | ERROR | empty HTML tree: None
+2025-12-15 18:01:47,469 | WARNING | discarding data: None
+2025-12-15 18:01:47,469 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:01:47,470 | ERROR | empty HTML tree: None
+2025-12-15 18:01:47,470 | WARNING | discarding data: None
+2025-12-15 18:01:47,470 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:01:47,470 | ERROR | empty HTML tree: None
+2025-12-15 18:01:47,470 | WARNING | discarding data: None
+2025-12-15 18:01:47,470 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:01:47,470 | ERROR | empty HTML tree: None
+2025-12-15 18:01:47,470 | WARNING | discarding data: None
+2025-12-15 18:01:47,470 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:01:47,470 | ERROR | empty HTML tree: None
+2025-12-15 18:01:47,471 | WARNING | discarding data: None
+2025-12-15 18:01:47,471 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:01:47,471 | ERROR | empty HTML tree: None
+2025-12-15 18:01:47,471 | WARNING | discarding data: None
+2025-12-15 18:01:47,471 | ERROR | parsed tree length: 0, wrong data type or not valid HTML
+2025-12-15 18:01:47,471 | ERROR | empty HTML tree: None
+2025-12-15 18:01:47,471 | WARNING | discarding data: None
