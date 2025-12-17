@@ -45,7 +45,7 @@
             "url": "https://www.techradar.com"
         },
         {
-            "name": "Tom's Hardware",
+            "name": "Toms Hardware",
             "url": "https://www.tomshardware.com"
         },
         {
@@ -65,99 +65,15 @@
             "url": "https://spectrum.ieee.org"
         },
         {
-            "name": "AI Business",
-            "url": "https://aibusiness.com"
-        },
-        {
             "name": "Analytics India Magazine",
             "url": "https://analyticsindiamag.com"
-        },
-        {
-            "name": "Marktechpost",
-            "url": "https://www.marktechpost.com"
         },
         {
             "name": "The Decoder",
             "url": "https://the-decoder.com"
         },
         {
-            "name": "Synced Review",
-            "url": "https://syncedreview.com"
-        },
-        {
-            "name": "Bloomberg Technology",
-            "url": "https://www.bloomberg.com/technology"
-        },
-        {
-            "name": "Reuters Technology",
-            "url": "https://www.reuters.com/technology/"
-        },
-        {
-            "name": "CNBC Tech",
-            "url": "https://www.cnbc.com/technology/"
-        },
-        {
-            "name": "Financial Times Tech",
-            "url": "https://www.ft.com/technology"
-        },
-        {
-            "name": "Wall Street Journal Tech",
-            "url": "https://www.wsj.com/tech"
-        },
-        {
-            "name": "Fortune Tech",
-            "url": "https://fortune.com/section/tech/"
-        },
-        {
-            "name": "Forbes Tech",
-            "url": "https://www.forbes.com/technology/"
-        },
-        {
-            "name": "Business Insider Tech",
-            "url": "https://www.businessinsider.com/tech"
-        },
-        {
-            "name": "BBC Technology",
-            "url": "https://www.bbc.com/news/technology"
-        },
-        {
-            "name": "CNN Tech",
-            "url": "https://www.cnn.com/business/tech"
-        },
-        {
-            "name": "The Guardian Tech",
-            "url": "https://www.theguardian.com/technology"
-        },
-        {
-            "name": "NY Times Tech",
-            "url": "https://www.nytimes.com/section/technology"
-        },
-        {
-            "name": "Washington Post Tech",
-            "url": "https://www.washingtonpost.com/technology/"
-        },
-        {
-            "name": "NPR Tech",
-            "url": "https://www.npr.org/sections/technology/"
-        },
-        {
-            "name": "AP Tech",
-            "url": "https://apnews.com/hub/technology"
-        },
-        {
-            "name": "Axios Tech",
-            "url": "https://www.axios.com/technology"
-        },
-        {
-            "name": "EE Times",
-            "url": "https://www.eetimes.com"
-        },
-        {
-            "name": "Semiconductor Engineering",
-            "url": "https://semiengineering.com"
-        },
-        {
-            "name": "Tom's Guide",
+            "name": "Toms Guide",
             "url": "https://www.tomsguide.com"
         },
         {
@@ -177,10 +93,6 @@
             "url": "https://www.theregister.com"
         },
         {
-            "name": "Hacker News",
-            "url": "https://news.ycombinator.com"
-        },
-        {
             "name": "Slashdot",
             "url": "https://slashdot.org"
         },
@@ -193,12 +105,96 @@
             "url": "https://cointelegraph.com"
         },
         {
-            "name": "The Block",
-            "url": "https://www.theblock.co"
-        },
-        {
             "name": "Decrypt",
             "url": "https://decrypt.co"
+        },
+        {
+            "name": "The Guardian",
+            "url": "https://www.theguardian.com"
+        },
+        {
+            "name": "NY Times",
+            "url": "https://www.nytimes.com"
+        },
+        {
+            "name": "NPR",
+            "url": "https://www.npr.org"
+        },
+        {
+            "name": "BBC",
+            "url": "https://www.bbc.com"
+        },
+        {
+            "name": "AP News",
+            "url": "https://apnews.com"
+        },
+        {
+            "name": "Forbes",
+            "url": "https://www.forbes.com"
+        },
+        {
+            "name": "Semiconductor Engineering",
+            "url": "https://semiengineering.com"
+        },
+        {
+            "name": "9to5Toys",
+            "url": "https://9to5toys.com"
+        },
+        {
+            "name": "Electrek",
+            "url": "https://electrek.co"
+        },
+        {
+            "name": "Hackernoon",
+            "url": "https://hackernoon.com"
+        },
+        {
+            "name": "InfoWorld",
+            "url": "https://www.infoworld.com"
+        },
+        {
+            "name": "Computerworld",
+            "url": "https://www.computerworld.com"
+        },
+        {
+            "name": "PCMag",
+            "url": "https://www.pcmag.com"
+        },
+        {
+            "name": "MacRumors",
+            "url": "https://www.macrumors.com"
+        },
+        {
+            "name": "Android Authority",
+            "url": "https://www.androidauthority.com"
+        },
+        {
+            "name": "How-To Geek",
+            "url": "https://www.howtogeek.com"
+        },
+        {
+            "name": "Lifehacker",
+            "url": "https://lifehacker.com"
+        },
+        {
+            "name": "XDA Developers",
+            "url": "https://www.xda-developers.com"
+        },
+        {
+            "name": "SiliconANGLE",
+            "url": "https://siliconangle.com"
+        },
+        {
+            "name": "Marktechpost",
+            "url": "https://www.marktechpost.com"
+        },
+        {
+            "name": "TechXplore",
+            "url": "https://techxplore.com"
+        },
+        {
+            "name": "Fortune",
+            "url": "https://fortune.com"
         }
     ]
 }
