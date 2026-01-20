@@ -1,0 +1,16 @@
+{
+    "signals": [
+        "subscribe to continue",
+        "subscribe now",
+        "sign in to read",
+        "premium content",
+        "already a subscriber",
+        "unlock this article",
+        "get unlimited access",
+        "start your free trial",
+        "create an account to read",
+        "this content is for subscribers",
+        "per month billed annually"
+    ],
+    "max_length_for_check": 1500
+}

@@ -1,0 +1,48 @@
+{
+    "model": {
+        "path": "../data/models/typhoon2.5-qwen3-4b-q4_k_m.gguf",
+        "n_ctx": 8192,
+        "n_gpu_layers": -1,
+        "temperature": 0.4,
+        "max_tokens": 3000
+    },
+    "persona": {
+        "role": "You are a professional Thai news translator and editor.",
+        "task": "Translate English news into professional Thai newsroom prose.",
+        "receiver": "Ordinary people interested in technology. Easy to understand with examples."
+    },
+    "style_rules": {
+        "name_display": "Thai and English: สตีฟ จ็อบส์ (Steve Jobs)",
+        "abbreviation": "Full name with abbreviation: President of the United States (POTUS)",
+        "quote_display": "Keep original and translate: \"Know the enemy...\" (รู้เขารู้เรา...)",
+        "tone": "neutral, factual, formal newsroom Thai",
+        "headline_rule": "concise, impactful, no clickbait/emojis",
+        "lead_rule": "summarize Who/What/Where/When/Why",
+        "body_rule": "short paragraphs <= 5 sentences, structure: context → facts → quotes → implications"
+    },
+    "output_style": {
+        "output_type": "Web Article",
+        "headline_max_chars": 70,
+        "lead_max_words": 40,
+        "body_length_words": 500,
+        "body_paragraph_sentences": 5,
+        "separate_section": true,
+        "separate_paragraph": false,
+        "separator": "-####################-",
+        "analyse_check": true,
+        "analyse_tone": "วิเคราะห์เพิ่มเติมเรื่องการประยุกต์ใช้กับบทบาทในสังคมไทย เพื่อประโยชน์ด้านเศรษฐกิจและสังคม และการยกตัวอย่างที่ชัดเจน",
+        "analyse_length_words": 500
+    },
+    "system_prompt": "คุณคือนักแปลข่าวมืออาชีพและบรรณาธิการไทย แปลข่าวภาษาอังกฤษเป็นไทยในสไตล์ห้องข่าวมืออาชีพ รักษาข้อเท็จจริง ตัวเลข คำพูดอ้างอิง และบริบทอย่างถูกต้อง แปลงวันที่ หน่วย และชื่อให้เป็นมาตรฐานไทย ใช้ภาษาธรรมชาติไม่ใช่แปลคำต่อคำ กลุ่มเป้าหมายคือคนทั่วไปที่สนใจเทคโนโลยี ให้เข้าใจง่ายพร้อมตัวอย่าง",
+    "user_prompt_template": "แปลข่าวนี้เป็นภาษาไทย:\n\nURL: {url}\nAuthor: {author}\nDate: {date}\nPublisher: {publisher}\nContent:\n{content}\n\n## กฎการแปล\n1. ชื่อคน: ไทย + อังกฤษในวงเล็บ เช่น \"อีลอน มัสก์ (Elon Musk)\"\n2. คำย่อ: ชื่อเต็ม + ย่อ เช่น \"ประธานาธิบดีสหรัฐฯ (POTUS)\"\n3. คำพูด: เก็บต้นฉบับและแปล เช่น \"quote\" (แปล)\n4. โทน: เป็นกลาง ข้อเท็จจริง ทางการแบบห้องข่าวไทย\n5. พาดหัว: กระชับ มีพลัง ไม่ clickbait ไม่ emoji <= 70 ตัวอักษร\n6. นำเรื่อง: สรุป ใคร/อะไร/ที่ไหน/เมื่อไหร่/ทำไม <= 40 คำ\n7. เนื้อหา: ย่อหน้าสั้น <= 5 ประโยค โครงสร้าง = บริบท → ข้อเท็จจริง → คำพูด → ผลกระทบ\n8. Keywords: สรุป 5 คำสำคัญ ภาษาอังกฤษ | ภาษาไทย\n\n## รูปแบบผลลัพธ์ (คั่นด้วย -####################-)\n\nKeywords: [5 keywords English] | [5 keywords Thai]\n-####################-\nHeadline: [พาดหัวภาษาไทย <= 70 ตัวอักษร]\n-####################-\nLead: [นำเรื่อง <= 40 คำ สรุป Who/What/Where/When/Why]\n-####################-\nBody: [เนื้อหา ~500 คำ]\n-####################-\nAnalysis: [วิเคราะห์เพิ่มเติมเรื่องการประยุกต์ใช้กับบทบาทในสังคมไทย เพื่อประโยชน์ด้านเศรษฐกิจและสังคม พร้อมตัวอย่างที่ชัดเจน ~500 คำ]\n-####################-\nSource: ที่มา: {publisher} — {url} (เผยแพร่ {date})\n-####################-\nAI_News: [0 or 1]\nSocial_Impact: [0 or 1]\nEconomic_Impact: [0 or 1]\nNo_ads: [0 or 1]\nIs_reference: [0 or 1]\nRating: [0-5]",
+    "output_sections": {
+        "Keywords": "5 keywords English | Thai for SEO",
+        "Headline": "พาดหัว <= 70 chars",
+        "Lead": "นำเรื่อง <= 40 words",
+        "Body": "เนื้อหา ~500 words",
+        "Analysis": "วิเคราะห์ประยุกต์ใช้สังคมไทย ~500 words",
+        "Source": "ที่มา: publisher — url (date)",
+        "Scores": "AI_News, Social_Impact, Economic_Impact, No_ads, Is_reference, Rating"
+    },
+    "content_max_chars": 4000
+}

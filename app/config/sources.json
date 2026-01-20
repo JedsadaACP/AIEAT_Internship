@@ -1,0 +1,300 @@
+{
+    "sources": [
+        {
+            "name": "TechCrunch",
+            "url": "https://techcrunch.com"
+        },
+        {
+            "name": "The Verge",
+            "url": "https://www.theverge.com"
+        },
+        {
+            "name": "Ars Technica",
+            "url": "https://arstechnica.com"
+        },
+        {
+            "name": "Wired",
+            "url": "https://www.wired.com"
+        },
+        {
+            "name": "Engadget",
+            "url": "https://www.engadget.com"
+        },
+        {
+            "name": "CNET",
+            "url": "https://www.cnet.com"
+        },
+        {
+            "name": "ZDNet",
+            "url": "https://www.zdnet.com"
+        },
+        {
+            "name": "Mashable",
+            "url": "https://mashable.com"
+        },
+        {
+            "name": "VentureBeat",
+            "url": "https://venturebeat.com"
+        },
+        {
+            "name": "The Next Web",
+            "url": "https://thenextweb.com"
+        },
+        {
+            "name": "TechRadar",
+            "url": "https://www.techradar.com"
+        },
+        {
+            "name": "Toms Hardware",
+            "url": "https://www.tomshardware.com"
+        },
+        {
+            "name": "Gizmodo",
+            "url": "https://gizmodo.com"
+        },
+        {
+            "name": "Digital Trends",
+            "url": "https://www.digitaltrends.com"
+        },
+        {
+            "name": "MIT Technology Review",
+            "url": "https://www.technologyreview.com"
+        },
+        {
+            "name": "IEEE Spectrum",
+            "url": "https://spectrum.ieee.org"
+        },
+        {
+            "name": "Analytics India Magazine",
+            "url": "https://analyticsindiamag.com"
+        },
+        {
+            "name": "The Decoder",
+            "url": "https://the-decoder.com"
+        },
+        {
+            "name": "Toms Guide",
+            "url": "https://www.tomsguide.com"
+        },
+        {
+            "name": "9to5Mac",
+            "url": "https://9to5mac.com"
+        },
+        {
+            "name": "9to5Google",
+            "url": "https://9to5google.com"
+        },
+        {
+            "name": "Android Police",
+            "url": "https://www.androidpolice.com"
+        },
+        {
+            "name": "The Register",
+            "url": "https://www.theregister.com"
+        },
+        {
+            "name": "Slashdot",
+            "url": "https://slashdot.org"
+        },
+        {
+            "name": "CoinDesk",
+            "url": "https://www.coindesk.com"
+        },
+        {
+            "name": "CoinTelegraph",
+            "url": "https://cointelegraph.com"
+        },
+        {
+            "name": "Decrypt",
+            "url": "https://decrypt.co"
+        },
+        {
+            "name": "The Guardian",
+            "url": "https://www.theguardian.com"
+        },
+        {
+            "name": "NY Times",
+            "url": "https://www.nytimes.com"
+        },
+        {
+            "name": "NPR",
+            "url": "https://www.npr.org"
+        },
+        {
+            "name": "BBC",
+            "url": "https://www.bbc.com"
+        },
+        {
+            "name": "AP News",
+            "url": "https://apnews.com"
+        },
+        {
+            "name": "Forbes",
+            "url": "https://www.forbes.com"
+        },
+        {
+            "name": "Semiconductor Engineering",
+            "url": "https://semiengineering.com"
+        },
+        {
+            "name": "9to5Toys",
+            "url": "https://9to5toys.com"
+        },
+        {
+            "name": "Electrek",
+            "url": "https://electrek.co"
+        },
+        {
+            "name": "Hackernoon",
+            "url": "https://hackernoon.com"
+        },
+        {
+            "name": "InfoWorld",
+            "url": "https://www.infoworld.com"
+        },
+        {
+            "name": "Computerworld",
+            "url": "https://www.computerworld.com"
+        },
+        {
+            "name": "PCMag",
+            "url": "https://www.pcmag.com"
+        },
+        {
+            "name": "MacRumors",
+            "url": "https://www.macrumors.com"
+        },
+        {
+            "name": "Android Authority",
+            "url": "https://www.androidauthority.com"
+        },
+        {
+            "name": "How-To Geek",
+            "url": "https://www.howtogeek.com"
+        },
+        {
+            "name": "Lifehacker",
+            "url": "https://lifehacker.com"
+        },
+        {
+            "name": "XDA Developers",
+            "url": "https://www.xda-developers.com"
+        },
+        {
+            "name": "SiliconANGLE",
+            "url": "https://siliconangle.com"
+        },
+        {
+            "name": "Marktechpost",
+            "url": "https://www.marktechpost.com"
+        },
+        {
+            "name": "TechXplore",
+            "url": "https://techxplore.com"
+        },
+        {
+            "name": "Fortune",
+            "url": "https://fortune.com"
+        },
+        {
+            "name": "Bloomberg",
+            "url": "https://www.bloomberg.com"
+        },
+        {
+            "name": "CNBC",
+            "url": "https://www.cnbc.com"
+        },
+        {
+            "name": "Reuters",
+            "url": "https://www.reuters.com"
+        },
+        {
+            "name": "Business Insider",
+            "url": "https://www.businessinsider.com"
+        },
+        {
+            "name": "Fast Company",
+            "url": "https://www.fastcompany.com"
+        },
+        {
+            "name": "Inc",
+            "url": "https://www.inc.com"
+        },
+        {
+            "name": "Entrepreneur",
+            "url": "https://www.entrepreneur.com"
+        },
+        {
+            "name": "MarketWatch",
+            "url": "https://www.marketwatch.com"
+        },
+        {
+            "name": "Quartz",
+            "url": "https://qz.com"
+        },
+        {
+            "name": "Scientific American",
+            "url": "https://www.scientificamerican.com"
+        },
+        {
+            "name": "Phys.org",
+            "url": "https://phys.org"
+        },
+        {
+            "name": "ScienceDaily",
+            "url": "https://www.sciencedaily.com"
+        },
+        {
+            "name": "Popular Science",
+            "url": "https://www.popsci.com"
+        },
+        {
+            "name": "New Scientist",
+            "url": "https://www.newscientist.com"
+        },
+        {
+            "name": "AI News",
+            "url": "https://www.artificialintelligence-news.com"
+        },
+        {
+            "name": "Unite.AI",
+            "url": "https://www.unite.ai"
+        },
+        {
+            "name": "Dataconomy",
+            "url": "https://dataconomy.com"
+        },
+        {
+            "name": "InfoQ",
+            "url": "https://www.infoq.com"
+        },
+        {
+            "name": "DZone",
+            "url": "https://dzone.com"
+        },
+        {
+            "name": "CNN",
+            "url": "https://www.cnn.com"
+        },
+        {
+            "name": "Fox Business",
+            "url": "https://www.foxbusiness.com"
+        },
+        {
+            "name": "ABC News",
+            "url": "https://abcnews.go.com"
+        },
+        {
+            "name": "CBS News",
+            "url": "https://www.cbsnews.com"
+        },
+        {
+            "name": "Euronews",
+            "url": "https://www.euronews.com"
+        },
+        {
+            "name": "The Independent",
+            "url": "https://www.independent.co.uk"
+        }
+    ]
+}

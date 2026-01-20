@@ -2,25 +2,19 @@
 AIEAT AI Engine - Scoring and Translation using LLM.
 
 Ported from V11_Score.ipynb and V11_Translate.ipynb.
-Uses Ollama for GPU-accelerated inference.
+Uses llama-cpp-python with Typhoon2.5 model.
 """
 import json
 import re
 import os
-import requests
 from typing import Dict, Any, Optional, List
 from datetime import datetime
 
 from app.utils.logger import get_app_logger
 from app.utils.exceptions import AIEngineError, ModelLoadError, InferenceError
 from app.services.database_manager import DatabaseManager
-from app.services.prompt_builder import build_translation_prompt, parse_translation_response
 
 logger = get_app_logger(__name__)
-
-# Ollama configuration
-OLLAMA_URL = "http://localhost:11434"
-DEFAULT_MODEL = "scb10x/typhoon2.5-qwen3-4b:latest"
 
 
 class PromptBuilder:
@@ -112,68 +106,53 @@ class InferenceController:
         
         logger.info(f"AI Engine ready: {len(self.keywords)} keywords, domain='{self.domain[:30]}...')")
     
-    def load_model(self, model_name: str = None, n_ctx: int = None):
+    def load_model(self, model_path: str = None, n_ctx: int = None):
         """
-        Initialize Ollama connection.
+        Load GGUF model using llama-cpp-python.
         
         Args:
-            model_name: Name of Ollama model to use (default: first available)
-            n_ctx: Ignored (Ollama manages context)
+            model_path: Path to GGUF file (default from config)
+            n_ctx: Context window size (default from config)
         """
-        # Check Ollama is running
         try:
-            r = requests.get(f"{OLLAMA_URL}/api/tags", timeout=5)
-            if r.status_code != 200:
-                raise ModelLoadError("Ollama not responding")
-            
-            models = [m['name'] for m in r.json().get('models', [])]
-            if not models:
-                raise ModelLoadError("No models available in Ollama. Run: ollama pull scb10x/typhoon2.5-qwen3-4b")
-            
-            # Check database for saved model preference
-            if not model_name:
-                try:
-                    profile = self.db.get_system_profile()
-                    if profile and profile.get('model_name'):
-                        model_name = profile['model_name']
-                        logger.info(f"Loaded saved model preference: {model_name}")
-                except Exception as e:
-                    logger.debug(f"Could not load saved model: {e}")
-            
-            # Use specified model or first available
-            if model_name and model_name in models:
-                self.model_name = model_name
-            elif model_name:
-                logger.warning(f"Model '{model_name}' not found, using {models[0]}")
-                self.model_name = models[0]
-            else:
-                self.model_name = models[0]
-            
-            self.llm = True  # Flag that model is ready
-            logger.info(f"Ollama ready: {self.model_name}")
-            
-        except requests.exceptions.ConnectionError:
-            raise ModelLoadError("Ollama is not running. Start it with: ollama serve")
-        except ModelLoadError:
-            raise
-        except Exception as e:
-            raise ModelLoadError(f"Failed to connect to Ollama: {e}")
-    
-    def _ollama_chat(self, messages: List[Dict], max_tokens: int = 300, temperature: float = 0.1) -> str:
-        """Send chat request to Ollama."""
-        payload = {
-            "model": self.model_name,
-            "messages": messages,
-            "stream": False,
-            "options": {
-                "num_predict": max_tokens,
-                "temperature": temperature
-            }
-        }
+            from llama_cpp import Llama
+        except ImportError:
+            raise ModelLoadError("llama-cpp-python not installed. Run: pip install llama-cpp-python")
         
-        r = requests.post(f"{OLLAMA_URL}/api/chat", json=payload, timeout=120)
-        r.raise_for_status()
-        return r.json().get('message', {}).get('content', '')
+        if model_path is None:
+            # Get from config, fix relative path
+            base_dir = os.path.dirname(os.path.abspath(__file__))
+            config_path = self.scoring_config['model']['path']
+            # Convert ../data/models/... to absolute path
+            model_path = os.path.normpath(os.path.join(base_dir, '..', '..', 'data', 'models', 
+                                                        os.path.basename(config_path)))
+        
+        if n_ctx is None:
+            n_ctx = self.scoring_config['model'].get('n_ctx', 4096)
+        
+        # Get device preference from database
+        device_pref = self._get_device_preference()
+        n_gpu_layers = self._get_gpu_layers(device_pref)
+        
+        # Get optimal thread count
+        import multiprocessing
+        n_threads = min(multiprocessing.cpu_count(), 8)
+        
+        logger.info(f"Loading model: {model_path}")
+        logger.info(f"  Context: {n_ctx}, GPU layers: {n_gpu_layers}, Threads: {n_threads}, Device: {device_pref}")
+        
+        try:
+            self.llm = Llama(
+                model_path=model_path,
+                n_ctx=n_ctx,
+                n_gpu_layers=n_gpu_layers,
+                n_threads=n_threads,
+                chat_format="chatml",
+                verbose=False
+            )
+            logger.info("Model loaded successfully")
+        except Exception as e:
+            raise ModelLoadError(f"Failed to load model: {e}")
     
     def _get_device_preference(self) -> str:
         """Get device preference from database."""
@@ -289,12 +268,13 @@ class InferenceController:
         )
         
         try:
-            text = self._ollama_chat(
+            response = self.llm.create_chat_completion(
                 messages=messages,
                 max_tokens=self.scoring_config['model'].get('max_tokens', 300),
                 temperature=self.scoring_config['model'].get('temperature', 0.1)
             )
             
+            text = response['choices'][0]['message']['content'].strip()
             result = self._extract_json(text)
             
             # 1. Count keyword matches
@@ -351,69 +331,40 @@ class InferenceController:
         }
     
     def translate_article(self, article_id: int = None, url: str = '', author: str = '',
-                          date: str = '', publisher: str = '', content: str = '',
-                          style: Dict = None) -> Dict:
+                          date: str = '', publisher: str = '', content: str = '') -> Dict:
         """
-        Translate article to Thai using active style settings.
-        
-        Args:
-            article_id: Article ID (optional)
-            url, author, date, publisher, content: Article data
-            style: Style settings dict (optional, loads active style if None)
+        Translate article to Thai.
         
         Returns dict with:
-        - Keywords, Headline, Lead, Body, Analysis, Source, Hashtags
+        - Keywords (English | Thai)
+        - Headline (Thai)
+        - Lead (Thai)
+        - Body (Thai)
+        - Analysis (Thai)
+        - Source
         """
         if not self.llm:
             raise InferenceError("Model not loaded. Call load_model() first.")
         
-        # Load active style if not provided
-        if style is None:
-            try:
-                style = self.db.get_active_style()
-                if not style:
-                    logger.info("No active style found, using defaults")
-                    style = {}
-            except Exception as e:
-                logger.warning(f"Could not load active style: {e}")
-                style = {}
-        
-        # Build article data dict
-        article_data = {
-            'url': url,
-            'author': author or 'Unknown',
-            'date': date or 'Unknown',
-            'publisher': publisher or 'Unknown',
-            'content': content
-        }
-        
-        # Build prompt using style settings
-        prompt = build_translation_prompt(style, article_data)
+        messages = self.translation_prompt_builder.build_messages(
+            url=url,
+            author=author or 'Unknown',
+            date=date or 'Unknown',
+            publisher=publisher or 'Unknown',
+            content=content
+        )
         
         try:
-            # Use direct generate API for single prompt
-            response = requests.post(
-                f"{OLLAMA_URL}/api/generate",
-                json={
-                    "model": self.llm,
-                    "prompt": prompt,
-                    "stream": False,
-                    "options": {
-                        "temperature": 0.2,
-                        "num_predict": 3000
-                    }
-                },
-                timeout=180
+            response = self.llm.create_chat_completion(
+                messages=messages,
+                max_tokens=self.translation_config['model'].get('max_tokens', 3000),
+                temperature=self.translation_config['model'].get('temperature', 0.4)
             )
             
-            if response.status_code != 200:
-                raise InferenceError(f"Ollama error: {response.status_code}")
-            
-            text = response.json().get('response', '')
-            
-            # Parse using new JSON-based parser
-            result = parse_translation_response(text)
+            text = response['choices'][0]['message']['content'].strip()
+            result = self._parse_translation(text)
             result['raw_response'] = text
+            result['success'] = True
             
             logger.debug(f"Translated article {article_id}")
             return result
@@ -427,7 +378,6 @@ class InferenceController:
                 'Body': '',
                 'Analysis': '',
                 'Source': '',
-                'Hashtags': '',
                 'raw_response': f'ERROR: {e}',
                 'success': False
             }

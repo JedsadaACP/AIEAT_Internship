@@ -1,0 +1,164 @@
+{
+    "description": "Diverse news sources for bulk scraping (~10,000 articles)",
+    "target_articles": 10000,
+    "categories": {
+        "technology": [
+            {
+                "name": "TechCrunch",
+                "rss": "https://techcrunch.com/feed/",
+                "max_articles": 500
+            },
+            {
+                "name": "The Verge",
+                "rss": "https://www.theverge.com/rss/index.xml",
+                "max_articles": 500
+            },
+            {
+                "name": "Wired",
+                "rss": "https://www.wired.com/feed/rss",
+                "max_articles": 500
+            },
+            {
+                "name": "Ars Technica",
+                "rss": "https://feeds.arstechnica.com/arstechnica/index",
+                "max_articles": 500
+            }
+        ],
+        "science": [
+            {
+                "name": "Science Daily",
+                "rss": "https://www.sciencedaily.com/rss/all.xml",
+                "max_articles": 500
+            },
+            {
+                "name": "Nature News",
+                "rss": "https://www.nature.com/nature.rss",
+                "max_articles": 300
+            },
+            {
+                "name": "New Scientist",
+                "rss": "https://www.newscientist.com/feed/home/",
+                "max_articles": 300
+            }
+        ],
+        "academy": [
+            {
+                "name": "Chronicle of Higher Ed",
+                "rss": "https://www.chronicle.com/section/News/6/rss",
+                "max_articles": 300
+            },
+            {
+                "name": "Inside Higher Ed",
+                "rss": "https://www.insidehighered.com/rss.xml",
+                "max_articles": 300
+            },
+            {
+                "name": "Times Higher Education",
+                "rss": "https://www.timeshighereducation.com/rss.xml",
+                "max_articles": 300
+            }
+        ],
+        "culture": [
+            {
+                "name": "The Guardian Culture",
+                "rss": "https://www.theguardian.com/culture/rss",
+                "max_articles": 500
+            },
+            {
+                "name": "NPR Arts",
+                "rss": "https://feeds.npr.org/1008/rss.xml",
+                "max_articles": 300
+            },
+            {
+                "name": "BBC Culture",
+                "rss": "https://feeds.bbci.co.uk/news/entertainment_and_arts/rss.xml",
+                "max_articles": 300
+            }
+        ],
+        "agriculture": [
+            {
+                "name": "AgWeb",
+                "rss": "https://www.agweb.com/rss.xml",
+                "max_articles": 300
+            },
+            {
+                "name": "Agriculture.com",
+                "rss": "https://www.agriculture.com/rss/feeds/all",
+                "max_articles": 300
+            },
+            {
+                "name": "Farm Progress",
+                "rss": "https://www.farmprogress.com/rss.xml",
+                "max_articles": 300
+            }
+        ],
+        "economics": [
+            {
+                "name": "Reuters Business",
+                "rss": "https://feeds.reuters.com/reuters/businessNews",
+                "max_articles": 500
+            },
+            {
+                "name": "Bloomberg",
+                "rss": "https://feeds.bloomberg.com/markets/news.rss",
+                "max_articles": 500
+            },
+            {
+                "name": "Financial Times",
+                "rss": "https://www.ft.com/rss/home",
+                "max_articles": 300
+            }
+        ],
+        "politics": [
+            {
+                "name": "AP Politics",
+                "rss": "https://apnews.com/apf-politics/feed",
+                "max_articles": 500
+            },
+            {
+                "name": "Reuters Politics",
+                "rss": "https://feeds.reuters.com/Reuters/PoliticsNews",
+                "max_articles": 500
+            },
+            {
+                "name": "The Hill",
+                "rss": "https://thehill.com/feed/",
+                "max_articles": 300
+            }
+        ],
+        "health": [
+            {
+                "name": "WHO News",
+                "rss": "https://www.who.int/rss-feeds/news-english.xml",
+                "max_articles": 300
+            },
+            {
+                "name": "Medical News Today",
+                "rss": "https://www.medicalnewstoday.com/rss",
+                "max_articles": 300
+            },
+            {
+                "name": "Health News",
+                "rss": "https://www.health.com/feeds/all.rss",
+                "max_articles": 300
+            }
+        ],
+        "environment": [
+            {
+                "name": "Environmental News Network",
+                "rss": "https://www.enn.com/rss.xml",
+                "max_articles": 300
+            },
+            {
+                "name": "TreeHugger",
+                "rss": "https://www.treehugger.com/feeds/all",
+                "max_articles": 300
+            },
+            {
+                "name": "Climate Home",
+                "rss": "https://www.climatechangenews.com/feed/",
+                "max_articles": 300
+            }
+        ]
+    }
+}

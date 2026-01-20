@@ -43,6 +43,7 @@ CREATE TABLE IF NOT EXISTS system_profile (
     is_related INTEGER DEFAULT 1,        -- 1=Yes, 0=No
     auto_scoring_status INTEGER DEFAULT 0, -- 1=On, 0=Off
     auto_translate_status INTEGER DEFAULT 0, -- 1=On, 0=Off
+    date_limit_days INTEGER DEFAULT 14,  -- Days back to scrape (1-30)
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_by TEXT,

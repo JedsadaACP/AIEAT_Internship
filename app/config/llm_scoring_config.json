@@ -1,0 +1,14 @@
+{
+    "model": {
+        "path": "../data/models/typhoon2.5-qwen3-4b-q4_k_m.gguf",
+        "n_ctx": 4096,
+        "n_gpu_layers": -1,
+        "temperature": 0.1,
+        "max_tokens": 200
+    },
+    "system_prompt": "You are a news relevance analyst for a business intelligence team. Your job is to determine if news articles are worth reading for someone tracking specific topics. Be strict: only mark 1 if the topic is CENTRAL to the article, not just mentioned. Return ONLY valid JSON.",
+    "user_prompt_template": "Analyze this news article and determine which topics are CENTRAL to it.\n\n**Article:**\n{content}\n\n**Task:** For each keyword below, decide:\n- Mark 1 ONLY if the article is primarily ABOUT this topic (would appear in a search for this topic)\n- Mark 0 if the topic is just mentioned in passing, used as context, or not present\n\n**Keywords:** {keywords}\n**Domain:** {domain}\n\n**Also check \"relate\":**\n- Mark 1 if a business analyst tracking {domain} should read this\n- Mark 0 if this article is not relevant to their work\n\n**Output format (JSON only, no explanation):**\n{{\"A.I.\": 0/1, \"Google\": 0/1, ..., \"relate\": 0/1}}\n\nJSON:",
+    "content_max_chars": 2000,
+    "keywords_file": "keywords.json",
+    "domain": "Technology, Economics, and AI Business"
+}
