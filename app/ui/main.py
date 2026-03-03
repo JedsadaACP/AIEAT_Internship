@@ -13,6 +13,7 @@ from app.ui.pages.detail import DetailPage
 from app.ui.pages.config import ConfigPage
 from app.ui.pages.style import StylePage
 from app.ui.pages.about import AboutPage
+from app.ui.pages.profiles import ProfilesPage
 from app.services.backend_api import BackendAPI
 
 
@@ -53,7 +54,7 @@ class AIEATApp:
         self.page.add(
             ft.Row(
                 controls=[
-                    create_sidebar(self.page, self.current_route, self._navigate),
+                    create_sidebar(self.page, self.current_route, self._navigate, api=self.api),
                     self.content_area
                 ],
                 expand=True,
@@ -83,7 +84,7 @@ class AIEATApp:
         
         # Rebuild sidebar to update selection
         self.page.controls[0].controls[0] = create_sidebar(
-            self.page, self.current_route, self._navigate
+            self.page, self.current_route, self._navigate, api=self.api
         )
         self.page.update()
     
@@ -116,6 +117,12 @@ class AIEATApp:
                 self.page_cache['dashboard_logic'] = logic
                 self.page_cache['dashboard_view'] = view
                 return view
+            
+        elif self.current_route == 'profiles':
+            def on_switch():
+                self.page_cache.clear()
+                self._navigate('dashboard')
+            return ProfilesPage(self.page, self.api, on_switch_callback=on_switch).build()
             
         elif self.current_route == 'config':
             # Always rebuild ConfigPage for fresh state
