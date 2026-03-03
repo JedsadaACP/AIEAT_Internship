@@ -198,6 +198,47 @@ class BackendAPI:
     def get_active_style(self) -> Optional[Dict]:
         """Get the currently active style."""
         return self.db.get_active_style()
+
+    # ==================== USER PROFILES ====================
+    def get_profiles(self):
+        """Get all user profiles."""
+        return self.db.get_all_profiles()
+    def get_active_profile(self):
+        """Get the currently active profile."""
+        return self.db.get_active_profile()
+    def switch_profile(self, profile_id: int):
+        """Switch user profile."""
+        try:
+            self.db.switch_active_profile(profile_id)
+            if self._engine:
+                self._engine._load_configs()
+            profile = self.db.get_active_profile()
+            return {'success': True, 'profile_id': profile_id, 'profile_name': profile['profile_name'] if profile else ''}
+        except Exception as e:
+            logger.error(f"Profile switch failed: {e}")
+            return {'success': False, 'error': str(e)}
+    def add_profile(self, profile_name: str, description: str = "", style_id: int = None):
+        """Add a new profile."""
+        try:
+            new_id = self.db.add_profile(profile_name, description, style_id)
+            return {'success': True, 'profile_id': new_id, 'profile_name': profile_name}
+        except Exception as e:
+            logger.error(f"Add profile failed: {e}")
+            return {'success': False, 'error': str(e)}
+    def rename_profile(self, profile_id: int, new_name: str):
+        """Rename a profile."""
+        try:
+            success = self.db.rename_profile(profile_id, new_name)
+            return {'success': True} if success else {'success': False, 'error': 'Cannot rename system profile'}
+        except Exception as e:
+            return {'success': False, 'error': str(e)}
+    def delete_profile(self, profile_id: int):
+        """Delete a profile."""
+        try:
+            success = self.db.delete_profile(profile_id)
+            return {'success': True} if success else {'success': False, 'error': 'Cannot delete system profile'}
+        except Exception as e:
+            return {'success': False, 'error': str(e)}
     
     # ==================== ARTICLES ====================
     
