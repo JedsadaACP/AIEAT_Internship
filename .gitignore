@@ -73,6 +73,7 @@ dist/
 build/
 installer_output/
 installer/
+AIEAT/
 *.spec.bak
 
 # App Backup (installed app copy)
@@ -80,6 +81,24 @@ AIEAT_App_backup/
 
 # Training Data (large)
 training_data/
+training_data.jsonl
+
+# Model files (HUGE — never commit)
+data/models/
+*.gguf
+*.bin
+
+# Distribution zips
+*Distribution*.zip
+
+# Scraper archive (old versions)
+scraper_archive/
+
+# Benchmark/test data
+benchmark_test/
+
+# Personal docs
+*.pptx
 
 # Temp scripts
 check_tables.py
