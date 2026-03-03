@@ -147,21 +147,26 @@ class DatabaseManager:
     def insert_source(self, domain_name: str, base_url: str, 
                       scraper_type: str = 'RSS') -> int:
         """
-        Insert a new source.
-        
-        Returns:
-            source_id of inserted source
+        Insert a new source. Returns source_id, or 0 if duplicate.
         """
         status_id = self.get_status_id('Online') or 6
         
         with self.get_connection() as conn:
+            existing = conn.execute(
+                "SELECT source_id FROM sources WHERE base_url = ?", (base_url,)
+            ).fetchone()
+            if existing:
+                return existing['source_id']
+            
             cursor = conn.execute("""
-                INSERT INTO sources (domain_name, base_url, scraper_type, status_id)
+                INSERT OR IGNORE INTO sources (domain_name, base_url, scraper_type, status_id)
                 VALUES (?, ?, ?, ?)
             """, (domain_name, base_url, scraper_type, status_id))
             conn.commit()
-            logger.info(f"Inserted source: {domain_name}")
-            return cursor.lastrowid
+            if cursor.lastrowid:
+                logger.info(f"Inserted source: {domain_name}")
+                return cursor.lastrowid
+            return 0
     
     def get_or_create_source(self, domain_name: str, base_url: str) -> int:
         """Get source ID or create if not exists."""

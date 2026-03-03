@@ -334,27 +334,25 @@ class BackendAPI:
     
     def add_source(self, url: str) -> int:
         """Add a new source from URL. Auto-detects domain name."""
-        # 1. Normalize URL to prevent duplicates (http vs https, www vs non-www)
         if not url:
             return 0
-            
+        
         url = url.strip()
         if not url.startswith('http'):
             url = 'https://' + url
-            
-        # Parse for domain
+        
         from urllib.parse import urlparse
         parsed = urlparse(url)
         domain = parsed.netloc or parsed.path.split('/')[0]
         
-        # Clean up domain (remove www.)
+        domain = domain.lower().strip()
         if domain.startswith('www.'):
             domain = domain[4:]
-            
-        # 2. Re-construct standardized URL (https://domain.com)
-        # This matches the 'base_url' UNIQUE constraint logic
+        
+        domain = domain.rstrip('/.')
+        
         clean_url = f"https://{domain}"
-            
+        
         return self.db.insert_source(domain, clean_url)
     
     def delete_source(self, source_id: int):

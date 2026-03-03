@@ -282,6 +282,8 @@ class ConfigPage:
             self._show_snackbar("Please enter a domain name", COLORS['error'])
             return
         
+        domain = ' '.join(domain.split()).title()
+        
         try:
             self.api.add_domain(domain)
             self.domain_input.value = ""
@@ -427,6 +429,8 @@ class ConfigPage:
             self._show_snackbar("Please enter a keyword", COLORS['error'])
             return
         
+        keyword = ' '.join(keyword.split())
+        
         try:
             self.api.add_keyword(keyword)
             self.keyword_input.value = ""
@@ -551,7 +555,7 @@ class ConfigPage:
                     ft.OutlinedButton(
                         "Import File",
                         icon=ft.Icons.UPLOAD_FILE,
-                        on_click=lambda e: self._import_sources_file(e)
+                        on_click=self._import_sources_file
                     ),
                 ]),
                 ft.Container(height=8),
@@ -611,39 +615,55 @@ class ConfigPage:
         self.sources_list.controls = [self._create_source_item(s) for s in filtered[:50]]
         self.page.update()
     
-    def _import_sources_file(self, e):
-        """Import sources from text file (one URL per line)."""
-        def on_file_picked(e):
-            if not e.files:
-                return
-            try:
-                file_path = e.files[0].path
-                with open(file_path, 'r', encoding='utf-8') as f:
-                    lines = f.readlines()
-                
-                added = 0
-                for line in lines:
-                    url = line.strip()
-                    if not url or url.startswith('#'):
-                        continue
-                    if not url.startswith('http'):
-                        url = 'https://' + url
-                    try:
-                        self.api.add_source(url)
-                        added += 1
-                    except:
-                        pass  # Skip duplicates
-                
-                self.all_sources = self.api.get_sources()
-                self._rebuild_sources_list()
-                self._show_snackbar(f"✓ Imported {added} sources", COLORS['success'])
-            except Exception as ex:
-                self._show_snackbar(f"Import error: {str(ex)}", COLORS['error'])
+    async def _import_sources_file(self, e):
+        """Import sources from a text/csv file (one URL per line)."""
+        files = await ft.FilePicker().pick_files(
+            dialog_title="Select Sources File",
+            allow_multiple=False,
+            file_type=ft.FilePickerFileType.CUSTOM,
+            allowed_extensions=["txt", "csv"],
+            with_data=True,
+        )
         
-        file_picker = ft.FilePicker(on_result=on_file_picked)
-        self.page.overlay.append(file_picker)
-        self.page.update()
-        file_picker.pick_files(allowed_extensions=['txt', 'csv'])
+        if not files:
+            return
+        
+        try:
+            picked = files[0]
+            if picked.bytes:
+                content = picked.bytes.decode('utf-8', errors='replace')
+            elif picked.path:
+                with open(picked.path, 'r', encoding='utf-8') as f:
+                    content = f.read()
+            else:
+                self._show_snackbar("Could not read file", COLORS['error'])
+                return
+            
+            lines = content.splitlines()
+            added = 0
+            skipped = 0
+            for line in lines:
+                url = line.strip()
+                if not url or url.startswith('#') or url.startswith('//'):
+                    continue
+                if ',' in url:
+                    url = url.split(',')[0].strip()
+                if not url.startswith('http'):
+                    url = 'https://' + url
+                try:
+                    self.api.add_source(url)
+                    added += 1
+                except Exception:
+                    skipped += 1
+            
+            self.all_sources = self.api.get_sources()
+            self._rebuild_sources_list()
+            self._show_snackbar(
+                f"✓ Imported {added} sources ({skipped} skipped)",
+                COLORS['success']
+            )
+        except Exception as ex:
+            self._show_snackbar(f"Import error: {str(ex)}", COLORS['error'])
     
     def _rebuild_sources_list(self):
         """Rebuild sources list after add/delete."""
