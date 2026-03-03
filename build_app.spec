@@ -4,12 +4,13 @@ import sys
 from PyInstaller.utils.hooks import collect_submodules, collect_data_files
 
 trafilatura_datas = collect_data_files('trafilatura')
+newspaper_datas = collect_data_files('newspaper')
 
 block_cipher = None
 ROOT = os.path.abspath('.')
 # Collect ALL submodules for packages with C extensions (.pyd files)
 extra_imports = []
-for pkg in ['PIL', 'aiohttp', 'lxml', 'charset_normalizer']:
+for pkg in ['PIL', 'aiohttp', 'lxml', 'charset_normalizer', 'newspaper']:
     extra_imports += collect_submodules(pkg)
 a = Analysis(
     ['app/ui/main.py'],
@@ -17,7 +18,7 @@ a = Analysis(
     binaries=[],
     datas=[
         ('data/schema.sql', 'data'),
-    ] + trafilatura_datas,
+    ] + trafilatura_datas + newspaper_datas,
     hiddenimports=[
         # Flet
         'flet', 'flet_core', 'flet_runtime',

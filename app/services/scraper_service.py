@@ -332,9 +332,15 @@ class ContentExtractor:
         try:
             result = trafilatura.bare_extraction(html)
             if result:
-                text = result.get('text', '')
-                title = result.get('title', '')
-                author = result.get('author', '')
+                # Handle both dict (old) and Document (new) return types
+                if isinstance(result, dict):
+                    text = result.get('text', '')
+                    title = result.get('title', '')
+                    author = result.get('author', '')
+                else:
+                    text = getattr(result, 'text', '') or ''
+                    title = getattr(result, 'title', '') or ''
+                    author = getattr(result, 'author', '') or ''
         except Exception as e:
             logger.error(f"Trafilatura extraction failed: {e}")
         
