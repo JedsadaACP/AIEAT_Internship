@@ -4,13 +4,12 @@ import sys
 from PyInstaller.utils.hooks import collect_submodules, collect_data_files
 
 trafilatura_datas = collect_data_files('trafilatura')
-newspaper_datas = collect_data_files('newspaper')
 
 block_cipher = None
 ROOT = os.path.abspath('.')
 # Collect ALL submodules for packages with C extensions (.pyd files)
 extra_imports = []
-for pkg in ['PIL', 'aiohttp', 'lxml', 'charset_normalizer', 'newspaper']:
+for pkg in ['PIL', 'aiohttp', 'lxml', 'charset_normalizer']:
     extra_imports += collect_submodules(pkg)
 a = Analysis(
     ['app/ui/main.py'],
@@ -18,7 +17,7 @@ a = Analysis(
     binaries=[],
     datas=[
         ('data/schema.sql', 'data'),
-    ] + trafilatura_datas + newspaper_datas,
+    ] + trafilatura_datas,
     hiddenimports=[
         # Flet
         'flet', 'flet_core', 'flet_runtime',
@@ -32,6 +31,7 @@ a = Analysis(
         'app.ui.components.sources_dialog',
         'app.ui.pages', 'app.ui.pages.dashboard', 'app.ui.pages.detail',
         'app.ui.pages.config', 'app.ui.pages.style', 'app.ui.pages.about',
+        'app.ui.pages.profiles',
         # App - Services
         'app.services', 'app.services.backend_api',
         'app.services.database_manager', 'app.services.scraper_service',
