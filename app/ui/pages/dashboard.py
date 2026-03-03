@@ -5,6 +5,7 @@ Main news listing with controls - FULLY WIRED TO BACKEND
 import flet as ft
 import threading
 import os
+import time
 from datetime import datetime, timedelta
 from email.utils import parsedate_to_datetime
 from app.ui.theme import COLORS, get_score_color, APP_CONFIG
@@ -47,6 +48,7 @@ class DashboardPage:
         self.filter_score = "all"  # all, high, low, unscored
         self.filter_source = "all"
         self.filter_keyword = "all"
+        self.selected_source_ids = set()  # Multi-select sources
         self.search_text = ""
         
         # Sort state
@@ -69,6 +71,7 @@ class DashboardPage:
         self.batch_stop_flag = False
         self.batch_is_running = False
         self.batch_start_button = None
+        self._last_refresh_time = 0  # For debouncing table refreshes
         
         # Load models from data folder
         self.available_models = self._load_available_models()
@@ -96,7 +99,62 @@ class DashboardPage:
             pass
         if not models:
             models = [{'file': 'none', 'name': 'Ollama not running'}]
+        if not models:
+            models = [{'file': 'none', 'name': 'Ollama not running'}]
         return models
+    
+    def refresh_state(self):
+        """Refresh page state from DB (called on navigation)."""
+        # Reload system profile
+        profile = self.api.db.get_system_profile() or {}
+        
+        # Helper for safe updates
+        def safe_update(control, new_value):
+            if hasattr(control, 'value') and control.value != new_value:
+                control.value = new_value
+                try:
+                    if control.page:
+                        control.update()
+                except:
+                    pass
+        
+        # Update model dropdown
+        saved_model = profile.get('model_name')
+        if saved_model and hasattr(self, 'model_dropdown'):
+            safe_update(self.model_dropdown, saved_model)
+            
+        # Update toggles
+        self.auto_scoring = profile.get('auto_scoring_status', 0) == 1
+        self.auto_translate = profile.get('auto_translate_status', 0) == 1
+        if hasattr(self, 'auto_score_checkbox'):
+            safe_update(self.auto_score_checkbox, self.auto_scoring)
+        if hasattr(self, 'auto_translate_checkbox'):
+            safe_update(self.auto_translate_checkbox, self.auto_translate)
+            
+        # Update header stats
+        if hasattr(self, 'header_articles_text') and hasattr(self, 'header_sources_text'):
+            with self.api.db.get_connection() as conn:
+                count = conn.execute("SELECT COUNT(*) FROM articles_meta").fetchone()[0]
+            sources_len = len(self.api.get_sources())
+            
+            self.header_articles_text.value = f"{count} articles"
+            self.header_sources_text.value = f"{sources_len} sources"
+            try:
+                if self.header_articles_text.page:
+                    self.header_articles_text.update()
+            except: pass
+            try:
+                if self.header_sources_text.page:
+                    self.header_sources_text.update()
+            except: pass
+            
+        # Refresh table content
+        # Only refresh table if already mounted, otherwise build() will handle initial load
+        try:
+            if hasattr(self, 'news_table_container') and self.news_table_container.page:
+                self._refresh_table()
+        except:
+            pass
         
     def build(self) -> ft.Control:
         """Build the dashboard page."""
@@ -123,6 +181,10 @@ class DashboardPage:
             total_articles = conn.execute("SELECT COUNT(*) FROM articles_meta").fetchone()[0]
         sources = self.api.get_sources()
         
+        # Store refs for refresh
+        self.header_articles_text = ft.Text(f"{total_articles} articles", color=ft.Colors.WHITE, size=12)
+        self.header_sources_text = ft.Text(f"{len(sources)} sources", color=ft.Colors.WHITE, size=12)
+        
         return ft.Container(
             padding=20,
             bgcolor=COLORS['card_bg'],
@@ -135,13 +197,13 @@ class DashboardPage:
                     padding=ft.padding.symmetric(horizontal=12, vertical=6),
                     bgcolor=COLORS['accent'],
                     border_radius=15,
-                    content=ft.Text(f"{total_articles} articles", color=ft.Colors.WHITE, size=12)
+                    content=self.header_articles_text
                 ),
                 ft.Container(
                     padding=ft.padding.symmetric(horizontal=12, vertical=6),
                     bgcolor=COLORS['success'],
                     border_radius=15,
-                    content=ft.Text(f"{len(sources)} sources", color=ft.Colors.WHITE, size=12)
+                    content=self.header_sources_text
                 ),
             ])
         )
@@ -219,9 +281,7 @@ class DashboardPage:
         sources = self.api.get_sources()
         keywords = self.api.get_keywords()
         
-        source_options = [ft.dropdown.Option("all", "All Sources")]
-        for s in sources[:20]:  # Limit to 20
-            source_options.append(ft.dropdown.Option(str(s.get('source_id')), s.get('domain_name', '')[:25]))
+        # source_options removed - using dialog now
         
         keyword_options = [ft.dropdown.Option("all", "All Keywords")]
         for k in keywords:
@@ -274,7 +334,13 @@ class DashboardPage:
                     # Source & Keyword
                     ft.Column([
                         ft.Text("Source:", size=12, weight=ft.FontWeight.W_500),
-                        self._create_source_dropdown(source_options),
+                        ft.ElevatedButton(
+                            "Select Sources (All)",
+                            icon=ft.Icons.LIST,
+                            on_click=self._open_source_filter_dialog,
+                            ref=(btn_ref := ft.Ref[ft.ElevatedButton]())
+                        ),
+                        # self._create_source_dropdown(source_options),
                         ft.Container(height=8),
                         ft.Text("Keyword:", size=12, weight=ft.FontWeight.W_500),
                         self._create_keyword_dropdown(keyword_options),
@@ -327,16 +393,112 @@ class DashboardPage:
             ),
         ])
 
-    def _create_source_dropdown(self, options):
-        """Create source dropdown and store reference."""
-        self.source_dropdown = ft.Dropdown(
-            value="all",
-            options=options,
-            width=180,
-            height=35,
-            text_size=11,
+    def _open_source_filter_dialog(self, e):
+        """Open a multi-select dialog for sources."""
+        # Store button reference if not already stored (happens on first build)
+        if not hasattr(self, 'source_selector_btn'):
+            self.source_selector_btn = e.control
+            
+        sources = self.api.get_sources()
+        # Sort alphabetically
+        sources.sort(key=lambda x: x.get('domain_name', '').lower())
+        
+        search_field = ft.TextField(
+            hint_text="Search sources...", 
+            autofocus=True,
+            prefix_icon=ft.Icons.SEARCH,
+            height=40,
+            text_size=12
         )
-        return self.source_dropdown
+        source_list = ft.Column(spacing=0, scroll=ft.ScrollMode.AUTO, height=300)
+        
+        # Temporary set for the dialog (so we can Cancel without affecting main state)
+        temp_selected = self.selected_source_ids.copy()
+        
+        def on_checkbox_change(e, source_id):
+            if e.control.value:
+                temp_selected.add(source_id)
+            else:
+                temp_selected.discard(source_id)
+                
+        def update_list(search_term="", initial=False):
+            items = []
+            for s in sources:
+                name = s.get('domain_name', '')
+                if search_term.lower() in name.lower():
+                    s_id = str(s.get('source_id'))
+                    is_checked = s_id in temp_selected
+                    items.append(
+                        ft.Container(
+                            content=ft.Checkbox(
+                                label=name, 
+                                value=is_checked,
+                                on_change=lambda e, sid=s_id: on_checkbox_change(e, sid)
+                            ),
+                            padding=ft.padding.only(left=10)
+                        )
+                    )
+            source_list.controls = items
+            if not initial:
+                source_list.update()
+            
+        search_field.on_change = lambda e: update_list(e.control.value)
+        
+        # Initial list populate (no update() call)
+        update_list(initial=True)
+        
+        def close(e):
+            dialog.open = False
+            self.page.update()
+            
+        def apply(e):
+            self.selected_source_ids = temp_selected.copy()
+            # Update button text
+            count = len(self.selected_source_ids)
+            self.source_selector_btn.text = f"Sources: {count} Selected" if count > 0 else "Select Sources (All)"
+            self.source_selector_btn.update()
+            dialog.open = False
+            self.page.update()
+            
+        def select_all(e):
+            for s in sources:
+                temp_selected.add(str(s.get('source_id')))
+            update_list(search_field.value)
+            
+        def clear_all(e):
+            temp_selected.clear()
+            update_list(search_field.value)
+
+        dialog = ft.AlertDialog(
+            title=ft.Text("Select Sources", size=16, weight=ft.FontWeight.BOLD),
+            content=ft.Container(
+                width=400,
+                height=400, # Fixed height for scrollable content
+                content=ft.Column([
+                    search_field,
+                    ft.Divider(height=1),
+                    ft.Row([
+                        ft.TextButton("Select All", on_click=select_all, height=30, style=ft.ButtonStyle(padding=5)),
+                        ft.TextButton("Clear", on_click=clear_all, height=30, style=ft.ButtonStyle(padding=5)),
+                    ]),
+                    ft.Divider(height=1),
+                    ft.Container(content=source_list, expand=True) # Scrollable list
+                ])
+            ),
+            actions=[
+                ft.TextButton("Cancel", on_click=close),
+                ft.ElevatedButton("Apply Selection", on_click=apply, bgcolor=COLORS['accent'], color=ft.Colors.WHITE),
+            ],
+            actions_alignment=ft.MainAxisAlignment.END,
+        )
+        self.page.overlay.append(dialog)
+        dialog.open = True
+        self.page.update()
+
+    def _create_source_dropdown(self, options):
+        """(Deprecated) Create source dropdown and store reference."""
+        # Kept only if needed to prevent errors if called elsewhere, but logic moved to dialog.
+        return ft.Container()
     
     def _create_keyword_dropdown(self, options):
         """Create keyword dropdown and store reference."""
@@ -382,22 +544,41 @@ class DashboardPage:
         # Get translation threshold from config
         profile = self.api.db.get_system_profile() or {}
         max_score = len(keywords) + 2  # keywords + is_new + is_related
+        # Default behavior: if threshold is missing, default to >50%
         threshold = profile.get('threshold', max_score // 2 + 1) or (max_score // 2 + 1)
         
-        # Custom score input (hidden initially)
-        self.batch_custom_score = ft.TextField(
-            label="Custom Score",
-            value="",
-            width=80,
-            height=40,
-            text_size=12,
-            keyboard_type=ft.KeyboardType.NUMBER,
-            visible=False,
+        # Custom score input container (Always visible but disabled by default)
+        self.batch_custom_score_container = ft.Container(
+            content=ft.Row([
+                ft.Text("Custom Score:", size=12),
+                ft.TextField(
+                    value="3",
+                    width=60,
+                    height=35,
+                    text_align=ft.TextAlign.CENTER,
+                    keyboard_type=ft.KeyboardType.NUMBER,
+                    ref=(custom_score_ref := ft.Ref[ft.TextField]())
+                ),
+            ], spacing=10)
         )
+        self.batch_custom_score = custom_score_ref
         
         def on_score_change(e):
-            self.batch_custom_score.visible = (e.control.value == "custom")
-            self.page.update()
+            # No UI update needed - always editable
+            pass
+        
+        self.batch_score_dd = ft.Dropdown(
+            label="Minimum Score",
+            value="threshold",
+            visible=(action == "translate"),
+            options=[
+                ft.dropdown.Option("0", "All Scored Articles"),
+                ft.dropdown.Option("threshold", f"Same as Threshold (≥ {threshold})"),
+                ft.dropdown.Option("custom", "Custom (Use value below)"),
+            ],
+            width=300,
+        )
+        self.batch_score_dd.on_change = on_score_change
         
         self.batch_score_dd = ft.Dropdown(
             label="Minimum Score",
@@ -409,8 +590,13 @@ class DashboardPage:
                 ft.dropdown.Option("custom", "Custom..."),
             ],
             width=300,
-            on_change=on_score_change
         )
+        self.batch_score_dd.on_change = on_score_change
+        
+        # Initial state check
+        # We need to defer this slightly or call after dialog open, 
+        # but calling here sets initial object state correctly
+        pass 
         
         # Initial check count
         self.batch_status_text = ft.Text(f"Ready to check for {action_text} articles...", size=12, color=ft.Colors.GREY)
@@ -422,7 +608,12 @@ class DashboardPage:
             ft.Container(height=10),
             self.batch_date_dd,
             self.batch_keyword_dd,
-            ft.Row([self.batch_score_dd, self.batch_custom_score], spacing=10),
+            self.batch_score_dd,
+            # FIX: Only show custom score input if action is 'translate'
+            ft.Container(
+                content=self.batch_custom_score_container, 
+                visible=(action == "translate")
+            ),
             ft.Container(height=10),
             ft.Row([self.batch_progress_ring, self.batch_status_text], spacing=10),
             self.batch_progress_bar
@@ -473,99 +664,132 @@ class DashboardPage:
             self.batch_status_text.color = COLORS['warning']
             self.page.update()
         else:
-            # Start the process
+            # Start the process async
             self.batch_stop_flag = False
             self.batch_is_running = True
             
             # Use content property for reliable update
-            self.batch_start_button.text = None 
             self.batch_start_button.content = ft.Text("STOP", color=ft.Colors.WHITE, weight=ft.FontWeight.BOLD)
             self.batch_start_button.bgcolor = ft.Colors.RED_600
-            self.batch_start_button.update()  # Force update of button specifically
+            self.batch_start_button.update()
             
             self.batch_progress_bar.visible = True
-            self.batch_progress_bar.value = None  # Indeterminate mode while starting
+            self.batch_progress_bar.value = None
             self.batch_progress_ring.visible = True
             self.batch_status_text.value = "Starting..."
             self.batch_status_text.color = COLORS['accent']
             self.page.update()
             
-            import threading
-            threading.Thread(target=self._process_batch_thread, daemon=True).start()
+            # Use run_task instead of threading
+            self.page.run_task(self._process_batch_async)
 
-    def _process_batch_thread(self):
-        """Thread worker for batch process."""
+    async def _process_batch_async(self):
+        """Async worker for batch process using step-by-step executor."""
+        import asyncio
         action = self.batch_action
         date_range = self.batch_date_dd.value
         keyword = self.batch_keyword_dd.value
         
-        # Get min_score based on dropdown selection
+        # Get min_score
         score_selection = self.batch_score_dd.value
         if score_selection == "0":
             min_score = 0
         elif score_selection == "threshold":
-            # Get threshold from config
             keywords = self.api.get_keywords()
+            # Dynamic calculation matching profile
             max_score = len(keywords) + 2
             profile = self.api.db.get_system_profile() or {}
             min_score = profile.get('threshold', max_score // 2 + 1) or (max_score // 2 + 1)
         elif score_selection == "custom":
             try:
-                min_score = int(self.batch_custom_score.value) if self.batch_custom_score.value else 0
+                # Get value from Ref
+                score_field = self.batch_custom_score.current
+                min_score = int(score_field.value) if score_field and score_field.value else 3
             except:
-                min_score = 0
+                min_score = 3
         else:
             min_score = int(score_selection) if score_selection.isdigit() else 0
         
         try:
-            generator = self.api.batch_process_articles(action, date_range, keyword, min_score)
+            # We need to get the generator from the Sync API
+            # Creating the generator is fast/non-blocking
+            generator = self.api.batch_process_articles(
+                action, 
+                date_range, 
+                keyword, 
+                min_score,
+                stop_callback=lambda: self.batch_stop_flag
+            )
             
-            for processed, total, status in generator:
-                # Check for stop request
-                if self.batch_stop_flag:
-                    self.batch_status_text.value = f"Stopped at {processed}/{total}"
-                    self.batch_status_text.color = COLORS['warning']
-                    self.batch_progress_ring.visible = False
-                    self._reset_batch_button()
-                    self.page.update()
-                    self._refresh_table()  # Refresh to show what was processed
-                    return
-                
-                if total == 0:
-                    self.batch_status_text.value = "No matching articles found."
-                    self.batch_status_text.color = COLORS['warning']
-                    self.batch_progress_bar.visible = False
-                    self.batch_progress_ring.visible = False
-                    self._reset_batch_button()
-                    self.page.update()
-                    return
+            def safe_next(g):
+                try:
+                    return next(g)
+                except StopIteration:
+                    return None
 
-                # Update progress with percentage
-                progress_pct = processed / total
-                self.batch_progress_bar.value = progress_pct
-                self.batch_status_text.value = f"Processing ({processed}/{total}): {status[:50]}"
-                self.page.update()
+            while True:
+                # Check for stop request (Double check for UI responsiveness)
+                if self.batch_stop_flag:
+                    self.batch_status_text.value = f"Stopped by user."
+                    self.batch_status_text.color = COLORS['warning']
+                    break
                 
-                # Refresh table every 5 articles so user sees progress
-                if processed % 5 == 0:
-                    self._refresh_table()
-            
-            self.batch_status_text.value = "Processing Complete!"
-            self.batch_status_text.color = COLORS['success']
-            self.batch_progress_bar.value = 1.0
-            self.batch_progress_ring.visible = False
-            self._reset_batch_button()
-            self.page.update()
-            
-            # Final refresh
-            self._refresh_table()
+                # Execute ONE step of the generator in a thread
+                # This prevents blocking the UI loop while waiting for LLM
+                try:
+                    # Use safe_next to avoid StopIteration bubbling into Future
+                    step_result = await asyncio.to_thread(safe_next, generator)
+                    
+                    if step_result is None:
+                        # Generator finished
+                        self.batch_status_text.value = "Processing Complete!"
+                        self.batch_status_text.color = COLORS['success']
+                        self.batch_progress_bar.value = 1.0
+                        break
+
+                    processed, total, status = step_result
+                    
+                    if total == 0:
+                        self.batch_status_text.value = "No matching articles found."
+                        self.batch_status_text.color = COLORS['warning']
+                        break
+
+                    # Update UI on main thread (safe here!)
+                    progress_pct = processed / total
+                    if total > 0:
+                        self.batch_progress_bar.value = progress_pct
+                    
+                    self.batch_status_text.value = f"Processing ({processed}/{total}): {status[:40]}..."
+                    self.page.update()
+                    
+                    # Refresh table frequently (every article)
+                    current_time = time.time()
+                    if processed % 1 == 0 and (current_time - self._last_refresh_time) > 0.1:
+                        self._last_refresh_time = current_time
+                        self._refresh_table()
+                        
+                except Exception as loop_e:
+                    # Handle unexpected errors in the loop
+                    print(f"Loop Error: {loop_e}")
+                    raise loop_e
             
         except Exception as e:
             print(f"Batch Error: {e}")
             self.batch_status_text.value = f"Error: {str(e)}"
             self.batch_status_text.color = COLORS['error']
+            
+        finally:
+            self.batch_progress_ring.visible = False
             self._reset_batch_button()
+            self._safe_update()
+            self._refresh_table()
+    
+    def _safe_update(self):
+        """Thread-safe page update wrapper for background threads."""
+        try:
             self.page.update()
+        except Exception as e:
+            print(f"Safe update failed (expected if page closed): {e}")
     
     def _reset_batch_button(self):
         """Reset the batch button to Start state."""
@@ -723,10 +947,13 @@ class DashboardPage:
             elif self.filter_score == "unscored":
                 sql += " AND (m.ai_score IS NULL OR m.ai_score = 0)"
             
-            # Source filter
-            if self.filter_source != "all":
-                sql += f" AND s.source_id = ?"
-                params.append(int(self.filter_source))
+            # Source filter (Multi-select)
+            if self.selected_source_ids:
+                # Convert to ints for safety and SQL IN clause
+                ids = [int(x) for x in self.selected_source_ids]
+                placeholders = ','.join('?' for _ in ids)
+                sql += f" AND s.source_id IN ({placeholders})"
+                params.extend(ids)
             
             # Keyword filter - filter by actual tag association
             # Note: We'll use a subquery or adjust the WHERE to check tag matches
@@ -872,6 +1099,10 @@ class DashboardPage:
             height=35,
             text_size=11,
         )
+        self.model_dropdown.on_change = self._on_model_change
+        # Dual-bind to ensure firing on all Flet versions
+        if hasattr(self.model_dropdown, 'on_select'):
+            self.model_dropdown.on_select = self._on_model_change
         
         # Pagination controls
         self.page_label = ft.Text(f"Page {self.current_page + 1}", size=12)
@@ -884,6 +1115,20 @@ class DashboardPage:
             hint_text="Go",
             text_align=ft.TextAlign.CENTER,
             on_submit=self._goto_page,
+        )
+        
+        # Auto-scoring toggle (loaded from DB)
+        self.auto_score_checkbox = ft.Checkbox(
+            label="Auto Scoring",
+            value=self.auto_scoring,
+            on_change=self._on_auto_score_change,
+        )
+        
+        # Auto-translation toggle (loaded from DB)
+        self.auto_translate_checkbox = ft.Checkbox(
+            label="Auto Translation",
+            value=self.auto_translate,
+            on_change=self._on_auto_translate_change,
         )
         
         return ft.Container(
@@ -911,19 +1156,9 @@ class DashboardPage:
                     ),
                     self.goto_input,
                     ft.Container(expand=True),
-                    # Auto-scoring toggle (loaded from DB)
-                    ft.Checkbox(
-                        label="Auto Scoring",
-                        value=self.auto_scoring,
-                        on_change=self._on_auto_score_change,
-                    ),
+                    self.auto_score_checkbox,
                     ft.Container(width=10),
-                    # Auto-translation toggle (loaded from DB)
-                    ft.Checkbox(
-                        label="Auto Translation",
-                        value=self.auto_translate,
-                        on_change=self._on_auto_translate_change,
-                    ),
+                    self.auto_translate_checkbox,
                     ft.Container(width=15),
                     self.model_dropdown,
                     ft.Container(width=10),
@@ -936,12 +1171,14 @@ class DashboardPage:
     
     def _build_start_button(self) -> ft.Control:
         """Build the START/STOP button."""
+        # Use content property for reliable dynamic updates (text property doesn't update)
         self.start_button = ft.ElevatedButton(
-            "START SCRAPER",
-            icon=ft.Icons.PLAY_ARROW,
+            content=ft.Row([
+                ft.Icon(ft.Icons.PLAY_ARROW, color=ft.Colors.WHITE, size=18),
+                ft.Text("START SCRAPER", color=ft.Colors.WHITE, weight=ft.FontWeight.BOLD)
+            ], spacing=8),
             style=ft.ButtonStyle(
                 bgcolor=COLORS['success'],
-                color=ft.Colors.WHITE,
                 padding=ft.padding.symmetric(horizontal=20, vertical=10),
             ),
             on_click=self._on_start_click
@@ -1012,15 +1249,44 @@ class DashboardPage:
         status = "enabled" if value else "disabled"
         self._show_snackbar(f"Auto Translation {status}", COLORS['accent'])
     
+    def _on_model_change(self, e):
+        """Handle model change (auto-save)."""
+        new_model = e.control.value
+        # print(f"DEBUG: Model change detected! New value: {new_model}")
+        if new_model:
+            # Update DB immediately (Persistent sync)
+            self.api.update_config({'model_name': new_model})
+            
+            # Reload backend model (CRITICAL: actually switches the engine)
+            self._show_snackbar(f"Switching to {new_model}...", COLORS['accent'])
+            settings = self.api.reload_model()
+            
+            self._show_snackbar(f"Model active: {new_model}", COLORS['success'])
+    
     def _reset_filters(self, e):
         """Reset all filters."""
         self.filter_date_range = "all"
         self.filter_score = "all"
         self.filter_source = "all"
         self.filter_keyword = "all"
+        self.selected_source_ids = set()
         self.search_text = ""
+        
+        # Update UI controls with guards
+        if hasattr(self, 'search_input') and self.search_input:
+            self.search_input.value = ""
+        if hasattr(self, 'source_selector_btn') and self.source_selector_btn:
+            self.source_selector_btn.text = "Select Sources (All)"
+        if hasattr(self, 'keyword_dropdown') and self.keyword_dropdown:
+            self.keyword_dropdown.value = "all"
+        
         self.current_page = 0
         self._refresh_table()
+        
+        if self.page:
+            try:
+                self.page.update()
+            except: pass
         self._show_snackbar("Filters reset", COLORS['accent'])
     
     def _prev_page(self, e):
@@ -1056,7 +1322,7 @@ class DashboardPage:
     def _apply_filters(self, e):
         """Apply current filters."""
         # Read values from dropdowns
-        self.filter_source = self.source_dropdown.value if hasattr(self, 'source_dropdown') else "all"
+        # Source handled by dialog state (self.selected_source_ids)
         self.filter_keyword = self.keyword_dropdown.value if hasattr(self, 'keyword_dropdown') else "all"
         
         self._refresh_table()
@@ -1182,7 +1448,7 @@ class DashboardPage:
         )
         
         self.table_column.controls = [new_table]
-        self.page.update()
+        self._safe_update()
     
     # ==================== SCRAPER CONTROLS ====================
     
@@ -1194,73 +1460,121 @@ class DashboardPage:
             self._start_scraper()
     
     def _start_scraper(self):
-        """Start the scraper in a background thread."""
+        """Start the scraper as an async task."""
         self.is_running = True
         self._update_status("Running")
         
-        self.start_button.text = "STOP"
-        self.start_button.icon = ft.Icons.STOP
+        # Update button to STOP state
+        self.start_button.content = ft.Row([
+            ft.Icon(ft.Icons.STOP, color=ft.Colors.WHITE, size=18),
+            ft.Text("STOP SCRAPER", color=ft.Colors.WHITE, weight=ft.FontWeight.BOLD)
+        ], spacing=8)
         self.start_button.style = ft.ButtonStyle(
             bgcolor=COLORS['error'],
-            color=ft.Colors.WHITE,
             padding=ft.padding.symmetric(horizontal=20, vertical=10),
         )
+        self.start_button.update()
         
         self.progress_container.visible = True
         self.progress_text.value = "Starting scraper..."
         self.progress_bar.value = 0
         self.page.update()
         
-        thread = threading.Thread(target=self._run_scraper_thread, daemon=True)
-        thread.start()
+        # Run async task
+        self.page.run_task(self._run_scraper_async)
     
-    def _run_scraper_thread(self):
-        """Run scraper in background."""
+    async def _run_scraper_async(self):
+        """Run scraper logic in background thread (async wrapper)."""
+        import asyncio
         try:
-            sources = self.api.get_sources()
-            total = len(sources)
+            # Run the blocking scraper in a thread
+            result = await asyncio.to_thread(self._run_scraper_sync_logic)
             
-            def progress_callback(current, total_count, source_name):
-                """Update UI and return whether to continue."""
-                self.progress_text.value = f"Scraping {current}/{total_count}: {source_name}"
-                self.progress_bar.value = current / total_count if total_count > 0 else 0
-                try:
-                    self.page.update()
-                except:
-                    pass
-                # Return False to stop scraper, True to continue
-                return self.is_running
-            
-            result = self.api.run_scraper(progress_callback=progress_callback)
-            
-            # Only show complete if still running (not stopped by user)
+            # Check if stopped during execution
             if self.is_running:
                 self._on_scraper_complete(result)
-            else:
-                # User stopped - just reset UI (already done in _stop_scraper)
-                pass
         except Exception as ex:
             self._on_scraper_error(str(ex))
+
+    def _run_scraper_sync_logic(self):
+        """The actual blocking scraper + AI logic invoked by asyncio."""
+        
+        # --- Step 1: Scraping ---
+        def scrape_progress(current, total_count, source_name):
+            """Update UI with scraping progress."""
+            self.progress_text.value = f"Scraping {current}/{total_count}: {source_name}"
+            self.progress_bar.value = current / total_count if total_count > 0 else 0
+            try:
+                self.page.update()
+            except:
+                pass
+            return self.is_running
+        scrape_result = self.api.run_scraper(progress_callback=scrape_progress)
+        
+        if not self.is_running:
+            return scrape_result
+        
+        # --- Step 2: AI Processing ---
+        def ai_progress(current, total_count, message):
+            """Update UI with AI scoring progress."""
+            self.progress_text.value = f"AI Scoring {current}/{total_count}: {message}"
+            self.progress_bar.value = current / total_count if total_count > 0 else None
+            try:
+                self.page.update()
+            except:
+                pass
+            return self.is_running
+        # Show indeterminate state while checking
+        self.progress_text.value = "Starting AI analysis..."
+        self.progress_bar.value = None  # indeterminate mode
+        try:
+            self.page.update()
+        except:
+            pass
+        
+        ai_result = self.api.run_ai_processing(progress_callback=ai_progress)
+        
+        # Merge results
+        scrape_result['ai_stats'] = ai_result
+        return scrape_result
     
     def _on_scraper_complete(self, result: dict):
         """Called when scraper completes."""
         self.is_running = False
         self._update_status("Idle")
         
-        self.start_button.text = "START SCRAPER"
-        self.start_button.icon = ft.Icons.PLAY_ARROW
-        self.start_button.style = ft.ButtonStyle(
-            bgcolor=COLORS['success'],
-            color=ft.Colors.WHITE,
-            padding=ft.padding.symmetric(horizontal=20, vertical=10),
-        )
+        # Reset button to START state using content property
+        if hasattr(self, 'start_button') and self.start_button:
+            self.start_button.content = ft.Row([
+                ft.Icon(ft.Icons.PLAY_ARROW, color=ft.Colors.WHITE, size=18),
+                ft.Text("START SCRAPER", color=ft.Colors.WHITE, weight=ft.FontWeight.BOLD)
+            ], spacing=8)
+            self.start_button.style = ft.ButtonStyle(
+                bgcolor=COLORS['success'],
+                padding=ft.padding.symmetric(horizontal=20, vertical=10),
+            )
         
-        self.progress_container.visible = False
+        if hasattr(self, 'progress_container') and self.progress_container:
+            self.progress_container.visible = False
         
         new_articles = result.get('new_articles', 0)
         elapsed = result.get('elapsed_minutes', 0)
         
-        self._show_snackbar(f"✓ Done! {new_articles} new articles ({elapsed:.1f} min)", COLORS['success'])
+        # Build completion message with AI stats if available
+        ai_stats = result.get('ai_stats', {})
+        scored = ai_stats.get('scored', 0)
+        translated = ai_stats.get('translated', 0)
+        
+        if scored > 0:
+            msg = f"✓ Done! {new_articles} articles, {scored} scored, {translated} translated ({elapsed:.1f} min)"
+        else:
+            msg = f"✓ Done! {new_articles} new articles ({elapsed:.1f} min)"
+        
+        self._show_snackbar(msg, COLORS['success'])
+        
+        if self.page:
+            try: self.page.update()
+            except: pass
         self._refresh_table()
     
     def _on_scraper_error(self, error: str):
@@ -1268,35 +1582,50 @@ class DashboardPage:
         self.is_running = False
         self._update_status("Error")
         
-        self.start_button.text = "START SCRAPER"
-        self.start_button.icon = ft.Icons.PLAY_ARROW
-        self.start_button.style = ft.ButtonStyle(
-            bgcolor=COLORS['success'],
-            color=ft.Colors.WHITE,
-            padding=ft.padding.symmetric(horizontal=20, vertical=10),
-        )
+        # Reset button to START state using content property
+        if hasattr(self, 'start_button') and self.start_button:
+            self.start_button.content = ft.Row([
+                ft.Icon(ft.Icons.PLAY_ARROW, color=ft.Colors.WHITE, size=18),
+                ft.Text("START SCRAPER", color=ft.Colors.WHITE, weight=ft.FontWeight.BOLD)
+            ], spacing=8)
+            self.start_button.style = ft.ButtonStyle(
+                bgcolor=COLORS['success'],
+                padding=ft.padding.symmetric(horizontal=20, vertical=10),
+            )
         
-        self.progress_container.visible = False
+        if hasattr(self, 'progress_container') and self.progress_container:
+            self.progress_container.visible = False
+            
         self._show_snackbar(f"Error: {error}", COLORS['error'])
         
-        try:
-            self.page.update()
-        except:
-            pass
-    
-    def _stop_scraper(self):
-        """Stop the scraper."""
-        self.is_running = False
-        self._update_status("Stopped")
+        self._refresh_table()
         
-        # Reset button to START state
-        self.start_button.text = "START SCRAPER"
-        self.start_button.icon = ft.Icons.PLAY_ARROW
-        self.start_button.style = ft.ButtonStyle(
-            bgcolor=COLORS['success'],
-            color=ft.Colors.WHITE,
-            padding=ft.padding.symmetric(horizontal=20, vertical=10),
-        )
+        if self.page:
+            try:
+                self.page.update()
+            except:
+                pass
+    
+    def _stop_scraper(self, e=None):
+        """Stop the scraper."""
+        if self.is_running:
+            self.is_running = False
+            self._update_status("Stopped")
+            
+            # Reset button to START state using content property
+            if hasattr(self, 'start_button') and self.start_button:
+                self.start_button.content = ft.Row([
+                    ft.Icon(ft.Icons.PLAY_ARROW, color=ft.Colors.WHITE, size=18),
+                    ft.Text("START SCRAPER", color=ft.Colors.WHITE, weight=ft.FontWeight.BOLD)
+                ], spacing=8)
+                self.start_button.style = ft.ButtonStyle(
+                    bgcolor=COLORS['success'],
+                    padding=ft.padding.symmetric(horizontal=20, vertical=10),
+                )
+            
+            if self.page:
+                try: self.page.update()
+                except: pass
         
         # Hide progress
         self.progress_container.visible = False
@@ -1321,6 +1650,10 @@ class DashboardPage:
                 "Stopping...": COLORS['warning'],
             }.get(status, COLORS['accent'])
             self.status_badge.content = ft.Text(status, color=ft.Colors.WHITE, size=11)
+            try:
+                if self.status_badge.page:
+                    self.status_badge.update()
+            except: pass
     
     def _edit_score(self, article):
         """Open dialog to edit article score."""
@@ -1377,14 +1710,26 @@ class DashboardPage:
     
     def _show_snackbar(self, message: str, color: str):
         """Show a snackbar notification."""
+        if not self.page:
+            return
+            
         snackbar = ft.SnackBar(
             content=ft.Text(message, color=ft.Colors.WHITE),
             bgcolor=color,
             duration=4000,
         )
-        self.page.overlay.append(snackbar)
-        snackbar.open = True
         try:
+            self.page.overlay.append(snackbar)
+            snackbar.open = True
             self.page.update()
         except:
             pass
+
+    def _reset_batch_button(self):
+        """Reset batch button after completion."""
+        if hasattr(self, 'batch_score_btn') and self.batch_score_btn:
+            self.batch_score_btn.content = ft.Text("BATCH SCORE ALL (IDLE)", size=12)
+            self.batch_score_btn.disabled = False
+            if self.page:
+                try: self.page.update()
+                except: pass

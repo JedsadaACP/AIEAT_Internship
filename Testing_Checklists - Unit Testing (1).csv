@@ -1,0 +1,210 @@
+Module,Function,Input,Expected Result,Output ,Testing Resutl,Note
+Database,Insert full article,all article data,article saved and ID returned,,PASSED,Main Functions (Article CRUD)
+Database,Get article by ID,article ID,article details returned,,PASSED,
+Database,Get new articles,limit number,list of unprocessed articles,,PASSED,
+Database,Update article score,article ID + score,score saved,,PASSED,
+Database,Update Thai content,article ID + Thai text,translation saved,,PASSED,
+Database,Get article count,no input,count by status returned,,PASSED,
+Database,Get articles by filter,date + keyword + score,matching articles returned,,
+Database,Get all sources,no input,list of sources returned,,PASSED,Source Management
+Database,Insert source,name + URL,source added,,PASSED,
+Database,Delete source,source ID,source removed,,PASSED,
+Database,Get or create source,name + URL,source ID returned,,PASSED,
+Database,Get source by URL,URL text,source info returned,,PASSED,
+Database,Get keywords,no input,keyword list returned,,PASSED,Keyword/Tag Management
+Database,Add keyword,keyword text,keyword added,,PASSED,
+Database,Delete keyword,keyword text,keyword removed,,PASSED,
+Database,Get domains,no input,domain list returned,,PASSED,
+Database,Add domain,domain text,domain added,,PASSED,
+Database,Delete domain,domain text,domain removed,,PASSED,
+Database,Add article tags,article ID + tag list,tags linked to article,,PASSED,
+Database,Remove tag,tag ID,tag removed,,PASSED,
+Database,Get system profile,no input,system settings returned,,PASSED,System Configuration
+Database,Update system profile,config values,settings saved,,PASSED,
+Database,Get all styles,no input,style list returned,,Style Management
+Database,Get active style,no input,current style returned,,
+Database,Set active style,style ID,style activated,,
+Database,Add style,name + settings,style created,,
+Database,Update style,style ID + settings,style updated,,
+Database,Delete style,style ID,style removed,,
+Database,Get style by ID,style ID,style details returned,,
+Database,Generate URL hash,URL text,unique hash generated,,Utility Functions (Internal)
+Database,Check article exists,hash,true or false returned,,
+Database,Insert article metadata,headline + URL + date,metadata saved,,
+Database,Insert article content,article ID + text,content saved,,
+Scraper,Run scraper,sources list,scrape news and return stats,,Main Functions
+Scraper,Discover source,source data,find and save new articles,,PASSED,
+Scraper,Discover articles,website URL,find article URLs automatically,,PASSED,
+Scraper,Extract content,HTML page,get title + author + content,,
+Scraper,Fetch content,article URL,download HTML from URL,,
+Scraper,Discover RSS,website URL,list of articles from RSS feed,,Discovery Functions
+Scraper,Discover sitemap,website URL,list of articles from sitemap,,
+Scraper,Discover homepage,website URL,list of article links from page,,PASSED,
+Scraper,Check paywall,article text,true if paywall detected,,Validation Functions
+Scraper,Match keywords,article text,list of matched keywords,,
+Scraper,Check same domain,article URL + source URL,true if same domain,,
+Scraper,Load config,config folder path,config settings loaded,,Utility Functions
+Scraper,Clean text,text with whitespace,clean text without extra spaces,,
+Scraper,Clean author name,raw author text,clean author name,,
+Scraper,Parse date,date string,datetime object,,
+Scraper,Check too old,date string,true if older than limit,,
+AI Engine,Process new articles,limit + threshold,score and translate articles,,Main Functions
+AI Engine,Score article,article ID + content,score calculated (0-7),,PASSED,Scoring Functions
+AI Engine,Check freshness,date string,"1 if recent, 0 if old",,
+AI Engine,Translate article,article data + style,Thai translation generated,,PASSED,Translation Functions
+AI Engine,Build messages,config + article data,chat messages list created,,
+AI Engine,Load model,model name,AI model connected,,PASSED,Model Management
+AI Engine,Unload model,no input,AI model freed from memory,,PASSED,
+Ollama,Check Ollama running,no input,true if server is up,,Connection Check
+Ollama,Check model available,no input,true if model exists,,
+Ollama,Generate text,prompt + system + max tokens,AI response text returned,,Main Functions
+Ollama,Score article,article ID + headline + content,score dictionary returned,,Scoring (Structure Mismatch)
+Ollama,Translate article,article ID + content,Thai text returned,,Translation (Template Error)
+Ollama,Get Ollama controller,model name,controller instance created,,Factory Function
+Prompt Builder,Build translation prompt,style dict + article dict,formatted Thai prompt string,,Main Function
+Prompt Builder,Parse translation response,LLM output text,structured response dict,,Parsing Functions
+Prompt Builder,Parse markdown format,markdown text,headline + lead + body + metadata,,
+Backend API,Preload model,no input,AI model loaded in background,,Model Management
+Backend API,Reload model,no input,AI model reloaded with new config,,
+Backend API,Unload model,no input,AI model freed from memory,,
+Backend API,Get config,no input,keywords + domains + profile returned,,PASSED,Config Functions
+Backend API,Get keywords,no input,keyword list returned,,PASSED,
+Backend API,Get domains,no input,domain list returned,,PASSED,
+Backend API,Update config,config dict,settings saved to database,,PASSED,
+Backend API,Add keyword,keyword text,keyword added and ID returned,,PASSED,
+Backend API,Add domain,domain text,domain added and ID returned,,PASSED,
+Backend API,Remove keyword,tag ID,keyword removed,,PASSED,
+Backend API,Delete keyword,keyword text,keyword removed by name,,PASSED,
+Backend API,Delete domain,domain text,domain removed by name,,PASSED,
+Backend API,Get styles,no input,style list returned,,Style Functions
+Backend API,Get style,style ID,style details returned,,
+Backend API,Add style,name + settings,style created and ID returned,,PASSED,
+Backend API,Update style,style ID + settings,style updated,,PASSED,
+Backend API,Delete style,style ID,style removed,,PASSED,
+Backend API,Set active style,style ID,style marked as active,,
+Backend API,Get active style,no input,current active style returned,,
+Backend API,Get articles,limit + offset + filters,article list returned,,PASSED,Article Functions
+Backend API,Get article detail,article ID,full article with content returned,,PASSED,
+Backend API,Get article count,no input,count by status returned,,PASSED,
+Backend API,Get sources,no input,source list returned,,Source Functions
+Backend API,Get source count,no input,total source count returned,,
+Backend API,Add source,URL,source added from URL,,
+Backend API,Delete source,source ID,source removed,,
+Backend API,Run scraper,source limit + callback,scrape news and return stats,,TEST_ERR,Action Functions
+Backend API,Score article,article ID,article scored and saved,,TEST_ERR,
+Backend API,Translate article,article ID,Thai translation generated and saved,,TEST_ERR,
+Backend API,Batch process articles,action + filters + callback,multiple articles processed,,TEST_ERR,
+Backend API,Get dashboard stats,no input,all stats for UI returned,,Stats Functions
+Config,Build page,API,config page UI returned,,UI Build
+Config,Build header,no input,header section returned,,
+Config,Build automation section,no input,model + date range settings,,
+Config,Build org section,no input,org name + domains UI,,
+Config,Build scoring section,no input,keywords + scoring toggles,,
+Config,Build sources section,no input,sources list with add/delete,,
+Config,Build threshold section,no input,threshold setting UI,,
+Config,Build save button,no input,save button returned,,
+Config,Refresh state,no input,UI updated from database,,State Management
+Config,Load models,no input,Ollama models loaded,,
+Config,Update threshold display,no input,threshold UI refreshed,,
+Config,Create domain chip,domain text,deletable chip returned,,Domain Functions
+Config,Add domain,event,domain added to database,,
+Config,Remove domain,domain text,domain removed from database,,
+Config,Create keyword chip,keyword text,deletable chip returned,,PASSED,Keyword Functions
+Config,Add keyword,event,keyword added to database,,PASSED,
+Config,Remove keyword,keyword text,keyword removed from database,,PASSED,
+Config,Add source,event,source URL added,,PASSED,Source Functions
+Config,Delete source,source ID + domain,source removed,,PASSED,
+Config,Filter sources,search event,sources list filtered,,PASSED,
+Config,Import sources file,event,file picker opened,,CODE_BUG,
+Config,On import result,file picker event,sources imported from file,,
+Config,Rebuild sources list,no input,sources list UI refreshed,,
+Config,Create source item,source dict,source list item with delete,,
+Config,On date radio change,event,custom field shown/hidden,,Event Handlers
+Config,On model change,dropdown event,model switched immediately,,
+Config,Show save confirmation,click event,confirmation dialog shown,,Save Functions
+Config,Save config,no input,all settings saved to database,,CODE_BUG,
+Config,Create tag chip,text,generic tag chip returned,,Utility
+Config,Refresh page,no input,full page rebuilt,,
+Config,Show snackbar,message + color,notification shown,,
+Config,Build threshold wrapper,no input,wrapper container returned,,
+Dashboard,Build page,API + callbacks,main dashboard UI returned,,UI Build
+Dashboard,Build header,no input,header with stats badge,,
+Dashboard,Build top bar,no input,search + filter + export buttons,,
+Dashboard,Build filter panel,no input,collapsible filter section,,
+Dashboard,Build progress section,no input,progress bar container,,
+Dashboard,Build news table,no input,data table with articles,,
+Dashboard,Build bottom controls,no input,pagination + model selector,,
+Dashboard,Build start button,no input,START/STOP button,,
+Dashboard,Refresh state,no input,page state reloaded from DB,,State Management
+Dashboard,Load available models,no input,Ollama models list returned,,
+Dashboard,Get filtered articles,filters,filtered article list returned,,PASSED,
+Dashboard,Refresh table,no input,table UI updated with current data,,TEST_ERR,Safe Update/Lifecycle Issue
+Dashboard,Open source filter dialog,click event,multi-select dialog opened,,Filter Functions
+Dashboard,Create keyword dropdown,options,keyword dropdown created,,
+Dashboard,Toggle filter panel,click event,filter panel shown/hidden,,
+Dashboard,Apply filters,click event,filters applied to table,,PASSED,
+Dashboard,Reset filters,click event,all filters cleared,,
+Dashboard,On date filter change,event,date range updated,,
+Dashboard,On score filter change,event,score filter updated,,
+Dashboard,On source filter change,event,source filter updated,,
+Dashboard,On keyword filter change,event,keyword filter updated,,
+Dashboard,Open batch dialog,action type,batch processing dialog opened,,PASSED,Batch Processing
+Dashboard,Close batch dialog,click event,dialog closed,,
+Dashboard,Toggle batch process,click event,start/stop batch operation,,
+Dashboard,Process batch async,no input,articles processed in background,,
+Dashboard,Reset batch button,no input,button reset to start state,,Method Initialization
+Dashboard,Sort by column,column name,table sorted by column,,Sorting
+Dashboard,Get sort icon,column name,sort direction icon returned,,
+Dashboard,Set page size,size number,page size changed,,PASSED,Pagination
+Dashboard,Goto page,page number,jump to specific page,,PASSED,
+Dashboard,Previous page,click event,go to previous page,,PASSED,
+Dashboard,Next page,click event,go to next page,,PASSED,
+Dashboard,Get articles for page,page number,check if page has data,,PASSED,
+Dashboard,On start click,click event,scraper started/stopped,,PASSED,Scraper Control
+Dashboard,Start scraper,no input,scraper task started,,
+Dashboard,Run scraper async,no input,async scraper wrapper,,
+Dashboard,Run scraper sync logic,callback,actual scraping execution,,
+Dashboard,On scraper complete,result dict,success UI update,,TEST_ERR,Lifecycle Issue
+Dashboard,On scraper error,error string,error UI update,,TEST_ERR,Lifecycle Issue
+Dashboard,Stop scraper,no input,scraper stopped,,TEST_ERR,Lifecycle Issue
+Dashboard,Update status,status text,status badge updated,,TEST_ERR,Lifecycle Issue
+Dashboard,On auto score change,toggle event,auto scoring saved to DB,,PASSED,Event Handlers
+Dashboard,On auto translate change,toggle event,auto translation saved to DB,,PASSED,
+Dashboard,On model change,dropdown event,AI model switched,,PASSED,
+Dashboard,On search,search text,articles filtered by text,,PASSED,
+Dashboard,Edit score,article,score edit dialog opened,,PASSED,
+Dashboard,Export CSV,click event,articles exported to Desktop,,PASSED,Utility
+Dashboard,Format date,date string,formatted date returned,,PASSED,
+Dashboard,Build keyword chips,article,keyword tags displayed,,PASSED,
+Dashboard,Show snackbar,message + color,notification shown,,PASSED,
+Dashboard,Safe update,no input,thread-safe page update,,TEST_ERR,Lifecycle Issue
+Dashboard,Parse date for sort,date string,unix timestamp returned,,
+Detail,Build page,article dict + callbacks,detail page UI returned,,UI Build
+Detail,Build layout controls,no input,list of UI controls returned,,
+Detail,Build header,no input,header with title + action buttons,,
+Detail,Build metadata,no input,author + date + source + score section,,
+Detail,Build content area,no input,two-column layout (original + output),,
+Detail,Translate article,click event,translation started in background,,Translation
+Detail,Run translation async,no input,article translated via AI,,
+Detail,Regenerate score,click event,article re-scored with AI,,
+Detail,Export source,click event,original content saved to Desktop,,Export Functions
+Detail,Export output,click event,translated content saved to Desktop,,
+Detail,Save file,type + content,file saved to Desktop with timestamp,,
+Detail,Copy to clipboard,text,text copied to clipboard,,Clipboard
+Detail,Format date,date string,formatted DD/MM/YYYY returned,,Utility
+Detail,Show snackbar,message + color,notification shown,,
+Style,Build page,API,style settings page UI returned,,UI Build
+Style,Build header,no input,header with icon + description,,
+Style,Refresh state,no input,"styles reloaded, UI updated",,State Management
+Style,Load styles data,no input,styles list loaded from API,,Data Management
+Style,Update form values,style dict,form fields populated with style data,,
+Style,Rebuild list items,no input,style list UI refreshed,,
+Style,Handle select,style dict,"style selected, form updated",,PASSED,Selection
+Style,Add style,click event,new style created in database,,PASSED,CRUD Operations
+Style,Delete style,click event,selected style deleted,,PASSED,
+Style,Save style,click event,style changes saved to database,,PASSED,
+Style,Set active,click event,style marked as active,,PASSED,
+Style,Show snackbar,message + color,notification shown,,Utility
+About,Build page,no input,About page UI returned,,PASSED,UI Build
+About,Build layout,sections,sections rendered,,PASSED,UI Build
+About,Refresh state,no input,UI updated,,PASSED,State Management

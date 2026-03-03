@@ -4,8 +4,12 @@ Configuration for keywords, domains, sources, threshold
 """
 import flet as ft
 import os
+import sqlite3
+import logging
 from app.ui.theme import COLORS
 from app.services.backend_api import BackendAPI
+
+logger = logging.getLogger(__name__)
 
 
 class ConfigPage:
@@ -19,6 +23,7 @@ class ConfigPage:
         self.api = api
         self.config = None
         self.all_sources = []
+        self.threshold_container = None  # Store reference for dynamic updates
         self.source_search = ""
         self.available_models = []
         
@@ -32,6 +37,44 @@ class ConfigPage:
         
         # Load models (uses cache or quick sync load)
         self._load_models()
+        
+    def refresh_state(self):
+        """Reload configuration from database."""
+        # Refresh API config
+        self.config = self.api.get_config()
+        self.all_sources = self.api.get_sources()
+        profile = self.config.get('profile', {})
+        
+        # Update Model Dropdown
+        saved_model = profile.get('model_name')
+        # Update model dropdown
+        if hasattr(self, 'model_dropdown'):
+             # Check if saved model is in options
+            available_keys = [opt.key for opt in self.model_dropdown.options]
+            if saved_model and saved_model in available_keys:
+                 self.model_dropdown.value = saved_model
+                 try:
+                     if self.model_dropdown.page:
+                        self.model_dropdown.update()
+                 except: pass
+
+        # Update Org Name
+        if hasattr(self, 'org_name_input'):
+            self.org_name_input.value = profile.get('org_name', 'AIEAT')
+            try:
+                if self.org_name_input.page:
+                    self.org_name_input.update()
+            except: pass
+            
+        # Update Toggles (Mandatory Scoring)
+        # Note: We need store references to these switches in _build_scoring_section to update them
+        # For now, we'll just trigger a full page update which is safer for layout changes
+        if self.page:
+            try:
+                self.page.update()
+            except:
+                pass
+
         
     def _load_models(self):
         """Load available models from Ollama (fast, uses cache)."""
@@ -73,7 +116,7 @@ class ConfigPage:
                             ft.Container(height=15),
                             self._build_scoring_section(),
                             ft.Container(height=15),
-                            self._build_threshold_section(),
+                            self._build_threshold_section_wrapper(),
                         ])
                     ),
                     ft.Container(width=15),
@@ -128,8 +171,9 @@ class ConfigPage:
             text_size=13,
             hint_text="Select AI Model",
             border_radius=5,
-            value=selected_model
+            value=selected_model,
         )
+        self.model_dropdown.on_change = self._on_model_change
         
         # Date range options
         current_days = profile.get('date_limit_days', 14)
@@ -167,8 +211,8 @@ class ConfigPage:
                 self.custom_days_field,
                 self.custom_days_label,
             ], spacing=15),
-            on_change=self._on_date_radio_change
         )
+        self.date_radio_group.on_change = self._on_date_radio_change
         
         return ft.Container(
             padding=20,
@@ -194,7 +238,42 @@ class ConfigPage:
         self.custom_days_label.visible = is_custom
         if not is_custom:
             self.custom_days_field.value = ""
+        if not is_custom:
+            self.custom_days_field.value = ""
         self.page.update()
+        
+    def _on_model_change(self, e):
+        """Handle model change immediately."""
+        new_model = e.control.value
+        if not new_model or new_model == "none":
+            return
+            
+        try:
+            # Update config immediately
+            profile_update = {'active_model_id': 0, 'model_name': new_model}  # model_name used by lookup
+            
+            # Find model ID if possible (optional but good for data consistency)
+            for m in self.available_models:
+                if m['file'] == new_model:
+                    # In a real app we'd map this better, but for now name is serving as key
+                    pass
+            
+            # Simple config update - pass profile fields directly, not wrapped
+            current_profile = self.config.get('profile', {})
+            
+            # API expects dict with field names, not {'profile': {...}}
+            profile_updates = {}
+            if new_model:
+                profile_updates['model_name'] = new_model
+            
+            self.api.update_config(profile_updates)
+            
+            # Trigger backend reload
+            self.api.reload_model()
+            
+            self._show_snackbar(f"✓ Model switched to: {new_model}", COLORS['success'])
+        except Exception as ex:
+            self._show_snackbar(f"Error switching model: {str(ex)}", COLORS['error'])
     
     def _build_org_section(self) -> ft.Control:
         """Build organization and domains section."""
@@ -363,6 +442,16 @@ class ConfigPage:
         # Keywords row reference
         self.keywords_row = ft.Row(controls=keyword_chips, wrap=True, spacing=8)
         
+        # Create switches with references stored
+        self.new_news_switch = ft.Switch(
+            value=profile.get('is_new_news', 1) == 1,
+            active_color=COLORS['accent'],
+        )
+        self.related_switch = ft.Switch(
+            value=profile.get('is_related', 1) == 1,
+            active_color=COLORS['accent'],
+        )
+        
         return ft.Container(
             padding=20,
             bgcolor=COLORS['card_bg'],
@@ -371,16 +460,10 @@ class ConfigPage:
                 # Mandatory Scoring
                 ft.Text("Mandatory Scoring:", weight=ft.FontWeight.BOLD, size=13),
                 ft.Row([
-                    ft.Switch(
-                        value=profile.get('is_new_news', 1) == 1,
-                        active_color=COLORS['accent'],
-                    ),
+                    self.new_news_switch,
                     ft.Text("New news (+1)", size=12),
                     ft.Container(width=30),
-                    ft.Switch(
-                        value=profile.get('is_related', 1) == 1,
-                        active_color=COLORS['accent'],
-                    ),
+                    self.related_switch,
                     ft.Text("Relate (+1)", size=12),
                 ], spacing=10),
                 ft.Container(height=15),
@@ -435,21 +518,12 @@ class ConfigPage:
             self.config = self.api.get_config()
             keywords = self.config.get('keywords', [])
             
-            # Rebuild keyword chips
+            # Rebuild keyword chips ONLY
             keyword_chips = [self._create_keyword_chip(k) for k in keywords]
-            self.keywords_row.controls = [
-                *keyword_chips,
-                self.keyword_input,
-                ft.IconButton(
-                    ft.Icons.ADD,
-                    icon_size=18,
-                    tooltip="Add Keyword",
-                    icon_color=COLORS['accent'],
-                    on_click=lambda e: self._add_keyword(e)
-                )
-            ]
+            self.keywords_row.controls = keyword_chips
             self.page.update()
             self._show_snackbar(f"✓ Added keyword: {keyword}", COLORS['success'])
+            self._update_threshold_display()  # Refresh max score
         except Exception as ex:
             err_msg = str(ex)
             if "UNIQUE constraint failed" in err_msg:
@@ -467,21 +541,12 @@ class ConfigPage:
             self.config = self.api.get_config()
             keywords = self.config.get('keywords', [])
             
-            # Rebuild keyword chips
+            # Rebuild keyword chips ONLY
             keyword_chips = [self._create_keyword_chip(k) for k in keywords]
-            self.keywords_row.controls = [
-                *keyword_chips,
-                self.keyword_input,
-                ft.IconButton(
-                    ft.Icons.ADD,
-                    icon_size=18,
-                    tooltip="Add Keyword",
-                    icon_color=COLORS['accent'],
-                    on_click=lambda e: self._add_keyword(e)
-                )
-            ]
+            self.keywords_row.controls = keyword_chips
             self.page.update()
             self._show_snackbar(f"✓ Removed keyword: {keyword}", COLORS['success'])
+            self._update_threshold_display()  # Refresh max score
         except Exception as ex:
             self._show_snackbar(f"Error: {str(ex)}", COLORS['error'])
     
@@ -512,7 +577,7 @@ class ConfigPage:
         
         # Sources list reference for updates
         self.sources_list = ft.Column(
-            controls=[self._create_source_item(s) for s in self.all_sources[:50]],
+            controls=[self._create_source_item(s) for s in self.all_sources],
             scroll=ft.ScrollMode.AUTO,
             spacing=2,
         )
@@ -551,14 +616,14 @@ class ConfigPage:
                     ft.OutlinedButton(
                         "Import File",
                         icon=ft.Icons.UPLOAD_FILE,
-                        on_click=lambda e: self._import_sources_file(e)
+                        on_click=self._import_sources_file
                     ),
                 ]),
                 ft.Container(height=8),
                 
                 # Sources list (scrollable)
                 ft.Container(
-                    height=220,
+                    height=500,
                     border=ft.border.all(1, ft.Colors.GREY_300),
                     border_radius=5,
                     padding=5,
@@ -608,20 +673,25 @@ class ConfigPage:
             filtered = [s for s in self.all_sources if search in s.get('domain_name', '').lower()]
         else:
             filtered = self.all_sources
-        self.sources_list.controls = [self._create_source_item(s) for s in filtered[:50]]
+        self.sources_list.controls = [self._create_source_item(s) for s in filtered]
         self.page.update()
     
-    def _import_sources_file(self, e):
+    async def _import_sources_file(self, e):
         """Import sources from text file (one URL per line)."""
-        def on_file_picked(e):
-            if not e.files:
-                return
+        # Create NEW FilePicker each time (bypasses 0.80.0 bug)
+        files = await ft.FilePicker().pick_files(allowed_extensions=['txt', 'csv'])
+        
+        # Process files directly (no callback needed)
+        if not files:
+            return
+        
+        added = 0
+        for file_info in files:
             try:
-                file_path = e.files[0].path
+                file_path = file_info.path
                 with open(file_path, 'r', encoding='utf-8') as f:
                     lines = f.readlines()
                 
-                added = 0
                 for line in lines:
                     url = line.strip()
                     if not url or url.startswith('#'):
@@ -631,24 +701,71 @@ class ConfigPage:
                     try:
                         self.api.add_source(url)
                         added += 1
-                    except:
+                    except sqlite3.IntegrityError:
                         pass  # Skip duplicates
-                
-                self.all_sources = self.api.get_sources()
-                self._rebuild_sources_list()
-                self._show_snackbar(f"✓ Imported {added} sources", COLORS['success'])
+                    except Exception as ex:
+                        logger.error(f"Import failed: {ex}")
+                        self._show_snackbar(f"Import failed: {str(ex)}", COLORS['error'])
             except Exception as ex:
                 self._show_snackbar(f"Import error: {str(ex)}", COLORS['error'])
         
-        file_picker = ft.FilePicker(on_result=on_file_picked)
-        self.page.overlay.append(file_picker)
-        self.page.update()
-        file_picker.pick_files(allowed_extensions=['txt', 'csv'])
+        self.all_sources = self.api.get_sources()
+        self._rebuild_sources_list()
+        self._show_snackbar(f"✓ Imported {added} sources", COLORS['success'])
+    
+    def _on_import_result(self, e):
+        """Handle file picker result."""
+        if not e.files or not isinstance(e.files, list) or len(e.files) == 0:
+            return
+        
+        try:
+            # Safely get file path from FilePicker result
+            file_info = e.files[0]
+            if not hasattr(file_info, 'path') or not file_info.path:
+                self._show_snackbar("Import error: No file path available", COLORS['error'])
+                return
+            
+            file_path = file_info.path
+            with open(file_path, 'r', encoding='utf-8') as f:
+                lines = f.readlines()
+            
+            added = 0
+            for line in lines:
+                url = line.strip()
+                if not url or url.startswith('#'):
+                    continue
+                if not url.startswith('http'):
+                    url = 'https://' + url
+                try:
+                    self.api.add_source(url)
+                    added += 1
+                except sqlite3.IntegrityError:
+                    pass  # Skip duplicates
+                except Exception as ex:
+                    logger.error(f"Import failed: {ex}")
+                    self._show_snackbar(f"Import failed: {str(ex)}", COLORS['error'])
+            
+            self.all_sources = self.api.get_sources()
+            self._rebuild_sources_list()
+            self._show_snackbar(f"✓ Imported {added} sources", COLORS['success'])
+        except Exception as ex:
+            self._show_snackbar(f"Import error: {str(ex)}", COLORS['error'])
     
     def _rebuild_sources_list(self):
         """Rebuild sources list after add/delete."""
-        self.sources_list.controls = [self._create_source_item(s) for s in self.all_sources[:50]]
+        self.sources_list.controls = [self._create_source_item(s) for s in self.all_sources]
         self.page.update()
+    
+    def _build_threshold_section_wrapper(self) -> ft.Control:
+        """Wrapper to store threshold container reference."""
+        self.threshold_container = ft.Container(content=self._build_threshold_section())
+        return self.threshold_container
+    
+    def _update_threshold_display(self):
+        """Update threshold display when keywords change."""
+        if self.threshold_container:
+            self.threshold_container.content = self._build_threshold_section()
+            self.page.update()
     
     def _build_threshold_section(self) -> ft.Control:
         """Build threshold setting section."""
@@ -755,6 +872,8 @@ class ConfigPage:
             updates = {
                 'date_limit_days': date_days,
                 'org_name': org_name,
+                'is_new_news': 1 if self.new_news_switch.value else 0,
+                'is_related': 1 if self.related_switch.value else 0,
             }
             if model_name:
                 updates['model_name'] = model_name

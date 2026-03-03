@@ -39,11 +39,13 @@ CREATE TABLE IF NOT EXISTS system_profile (
     threshold_mandatory INTEGER DEFAULT 2,
     threshold_max INTEGER DEFAULT 5,
     active_model_id INTEGER,
+    model_name TEXT,                  -- Ollama model name (e.g., 'scb10x/typhoon2.5-qwen3-4b:latest')
     is_new_news INTEGER DEFAULT 1,       -- 1=Yes, 0=No
     is_related INTEGER DEFAULT 1,        -- 1=Yes, 0=No
     auto_scoring_status INTEGER DEFAULT 0, -- 1=On, 0=Off
     auto_translate_status INTEGER DEFAULT 0, -- 1=On, 0=Off
     date_limit_days INTEGER DEFAULT 14,  -- Days back to scrape (1-30)
+    threshold INTEGER,                   -- Translation threshold score
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_by TEXT,
@@ -55,13 +57,14 @@ CREATE TABLE IF NOT EXISTS system_profile (
 -- ==========================================
 CREATE TABLE IF NOT EXISTS tags (
     tag_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    tag_name TEXT NOT NULL UNIQUE,
+    tag_name TEXT NOT NULL,
     tag_type TEXT DEFAULT 'Keyword', -- 'Keyword' or 'Domain'
     weight_score INTEGER DEFAULT 1,
     status_id INTEGER,               -- Active Status ID
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_by TEXT,
+    UNIQUE(tag_name, tag_type),      -- Allow same name for different types
     FOREIGN KEY (status_id) REFERENCES master_status(status_id)
 );
 
@@ -81,32 +84,28 @@ CREATE TABLE IF NOT EXISTS sources (
     FOREIGN KEY (status_id) REFERENCES master_status(status_id)
 );
 
+
 -- ==========================================
--- 6. STYLES (Output Styles)
+-- 8. STYLES (Output Styles)
 -- ==========================================
 CREATE TABLE IF NOT EXISTS styles (
     style_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    style_name TEXT NOT NULL,
-    output_type TEXT DEFAULT 'Translation',
-    system_persona TEXT,          -- "You are an editor..."
-    status_id INTEGER,            -- Active Status ID
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_by TEXT,
-    FOREIGN KEY (status_id) REFERENCES master_status(status_id)
-);
-
--- ==========================================
--- 7. STYLE PARAMS (Style Parameters)
--- ==========================================
-CREATE TABLE IF NOT EXISTS style_params (
-    param_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    style_id INTEGER NOT NULL,
-    param_key TEXT NOT NULL,      -- e.g. "headline_limit"
-    param_value TEXT NOT NULL,
-    param_group TEXT,             -- 'structure', 'analysis'
-    sort_order INTEGER DEFAULT 0,
-    FOREIGN KEY (style_id) REFERENCES styles(style_id) ON DELETE CASCADE
+    name TEXT NOT NULL,
+    output_type TEXT DEFAULT 'article',
+    tone TEXT DEFAULT 'professional',
+    headline_length TEXT DEFAULT 'medium',
+    lead_length TEXT DEFAULT 'medium',
+    body_length TEXT DEFAULT 'medium',
+    analysis_length TEXT DEFAULT 'medium',
+    include_keywords INTEGER DEFAULT 1,
+    include_lead INTEGER DEFAULT 1,
+    include_analysis INTEGER DEFAULT 1,
+    include_source INTEGER DEFAULT 1,
+    include_hashtags INTEGER DEFAULT 0,
+    custom_instructions TEXT,
+    is_active INTEGER DEFAULT 0,
+    is_default INTEGER DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 -- ==========================================
@@ -189,3 +188,9 @@ INSERT OR IGNORE INTO master_status (status_name, status_group, description) VAL
 
 -- Seed System Profile (Singleton)
 INSERT OR IGNORE INTO system_profile (profile_id, org_name) VALUES (1, 'AIEAT Default Org');
+
+-- Seed Default Styles
+INSERT OR IGNORE INTO styles (style_id, name, output_type, tone, headline_length, body_length, analysis_length, include_hashtags, is_default, is_active, custom_instructions) VALUES 
+(1, 'News Article', 'article', 'professional', 'medium', 'medium', 'medium', 0, 1, 1, 'You are a professional news editor. Synthesize the provided content into a comprehensive, fluent Thai news article. Maintain a neutral, journalistic tone. Structure with clear headings.'),
+(2, 'Social Media', 'facebook', 'conversational', 'short', 'short', 'short', 1, 1, 0, 'You are a social media manager for a Tech page. Summarize this news for Facebook/Twitter in Thai. Use an engaging, conversational tone. Use emojis 🚀 and bullet points. Focus on why this matters to the user.'),
+(3, 'Executive Brief', 'summary', 'formal', 'medium', 'short', 'short', 0, 1, 0, NULL);

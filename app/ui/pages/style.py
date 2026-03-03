@@ -22,6 +22,8 @@ class StylePage:
         self.selected_style = None
         self.selected_style_id = None
         
+
+        
         # --- UI Containers ---
         self.style_list_col = ft.Column(spacing=8, scroll=ft.ScrollMode.AUTO)
         self.form_card = None  # Will be created in build
@@ -30,11 +32,11 @@ class StylePage:
         self.name_field = ft.TextField(label="Style Name", width=300, border_radius=8, text_size=14)
         
         self.output_type_dropdown = ft.Dropdown(
-            label="Output Type", width=220, border_radius=8,
+            label="Prompt Template", width=220, border_radius=8,
             options=[
-                ft.dropdown.Option("facebook", "Facebook Post"),
-                ft.dropdown.Option("article", "Web Article"),
-                ft.dropdown.Option("summary", "Executive Summary"),
+                ft.dropdown.Option("facebook", "Social Media"),
+                ft.dropdown.Option("article", "News Article"),
+                ft.dropdown.Option("summary", "Briefing"),
             ]
         )
         
@@ -66,8 +68,9 @@ class StylePage:
         self.include_hashtags = ft.Checkbox(label="Hashtags")
         
         self.analysis_focus = ft.TextField(
-            label="Analysis Focus", width=500, border_radius=8, 
-            multiline=True, min_lines=2, max_lines=3, text_size=13
+            label="Custom Context / Instructions", width=500, border_radius=8, 
+            multiline=True, min_lines=2, max_lines=3, text_size=13,
+            hint_text="e.g. 'Translate for a 5-year old', 'Focus on economic impact'"
         )
         
         # Action Buttons
@@ -81,6 +84,31 @@ class StylePage:
             style=ft.ButtonStyle(bgcolor=COLORS['accent'], color="#ffffff"),
             on_click=self._set_active
         )
+        
+    def refresh_state(self):
+        """Reload styles from database."""
+        self._load_styles_data()
+        
+        # If we have a selected style, try to update it; otherwise select active/first
+        if self.selected_style_id:
+            # Try to find currently selected style in new data
+            updated = next((s for s in self.styles if s.get('style_id') == self.selected_style_id), None)
+            if updated:
+                self.selected_style = updated
+            else:
+                # Fallback if deleted
+                self.selected_style = self.styles[0] if self.styles else None
+        
+        # Update UI
+        if self.selected_style:
+            self.selected_style_id = self.selected_style.get('style_id')
+            self._update_form_values(self.selected_style)
+        else:
+            self.selected_style_id = None
+            # Clear form or set defaults if needed
+            
+        self._rebuild_list_items()
+        self.page.update()
 
     def build(self) -> ft.Control:
         """Build the static page structure."""
@@ -198,7 +226,7 @@ class StylePage:
         self.include_source.value = bool(style.get('include_source', 1))
         self.include_hashtags.value = bool(style.get('include_hashtags', 1))
         
-        self.analysis_focus.value = style.get('analysis_focus', '')
+        self.analysis_focus.value = style.get('custom_instructions', '')
         
         # Update button state
         is_active = style.get('is_active', False)
@@ -292,7 +320,7 @@ class StylePage:
                 'include_analysis': 1 if self.include_analysis.value else 0,
                 'include_source': 1 if self.include_source.value else 0,
                 'include_hashtags': 1 if self.include_hashtags.value else 0,
-                'analysis_focus': self.analysis_focus.value
+                'custom_instructions': self.analysis_focus.value
             }
             self.api.update_style(self.selected_style_id, **data)
             self._load_styles_data() # Reload to get updates

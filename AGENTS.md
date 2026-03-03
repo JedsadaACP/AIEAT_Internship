@@ -1,169 +1,127 @@
-# AGENTS.md - AIEAT Project Codex
+# AGENTS.md - AIEAT Project
 
-> This file defines how AI assistants should work on this project.
-> **READ THIS FIRST before making any changes.**
-
----
-
-## Current Status 🔨
-
-**Phase:** Pre-UAT Bug Fixes
-**Deadline:** Friday Jan 23, 2026 (Installer package due)
-
-**Active Tasks:**
-- [ ] Fix delete keywords function
-- [ ] Fix delete domains function
-- [ ] Fix sources add/delete
-- [ ] Fix Style Setting (or remove)
-- [ ] End-to-end testing
-- [ ] Create installer package
-
-**Completed:**
-- ✅ Migrated from llama-cpp to Ollama backend
-- ✅ GPU acceleration via Ollama
-- ✅ Model selection from Ollama models
-- ✅ Removed CPU/GPU toggle (obsolete with Ollama)
-
-**Side Tasks (After Installer):**
-- ⬜ Training data generation with Qwen3:8b
-- ⬜ LoRA fine-tuning
-- ⬜ Model evaluation
+> **Universal agent configuration** for AI coding assistants.
 
 ---
 
-## Quick Start
+## 🚀 Quick Start
 
 ```bash
-# Ensure Ollama is running
-ollama serve
+# Install dependencies
+pip install -r requirements.txt
 
 # Start the application
 python run_ui.py
 
-# List available models
-ollama list
+# Ensure Ollama is running
+ollama serve
+
+# Preferred translation model
+ollama pull scb10x/typhoon2.5-qwen3-4b:latest
 ```
 
 ---
 
-## Architecture
+## 📋 Code Style
 
-### Backend: Ollama (NOT llama-cpp)
-
-The app uses **Ollama** for LLM inference, NOT llama-cpp-python.
-
-| Component | Details |
-|-----------|---------|
-| **Ollama URL** | http://localhost:11434 |
-| **Default Model** | First available in Ollama |
-| **Recommended** | scb10x/typhoon2.5-qwen3-4b |
-
-**Important:** Ollama must be running for the app to work!
+- **Python 3.10+** with type hints required
+- **Docstrings** for all classes and public methods
+- **Flet UI**: Use `page.run_task()` for async operations
+- **Error handling**: Log with `logger.error()`, never silent failures
+- **After editing**: Run `python -m py_compile <file.py>`
 
 ---
 
-## Project Structure
+## 🔧 Tech Stack (DO NOT CHANGE)
+
+| Component | Technology | Notes |
+|-----------|------------|-------|
+| **LLM Backend** | Ollama API | localhost:11434 |
+| **Primary Model** | `scb10x/typhoon2.5-qwen3-4b` | Best for Thai translation |
+| **UI Framework** | Flet | Desktop app |
+| **Database** | SQLite | `data/aieat_news.db` |
+| **Scraping** | aiohttp + BeautifulSoup | Async |
+
+### BANNED Technologies
+- ❌ llama-cpp-python (removed)
+- ❌ selenium/playwright for scraping
+- ❌ Flask/FastAPI (not needed)
+
+---
+
+## 📁 Project Structure
 
 ```
 AIEAT_Internship/
-├── app/                    # Main Application
-│   ├── config/             # LLM configs (scoring, translation)
-│   ├── services/           # Backend Services
-│   │   ├── ai_engine.py        # LLM via Ollama API
-│   │   ├── backend_api.py      # Main API layer
+├── app/
+│   ├── services/           # Backend logic
+│   │   ├── ai_engine.py        # LLM via Ollama
+│   │   ├── ollama_engine.py    # Alternative Ollama controller
+│   │   ├── backend_api.py      # Main API facade
 │   │   ├── database_manager.py # SQLite operations
-│   │   └── scraper_service.py  # News scraper
-│   ├── ui/                 # Flet UI Pages
-│   │   └── pages/
-│   │       ├── dashboard.py    # Main news listing
-│   │       ├── detail.py       # Article detail view
-│   │       ├── config.py       # Settings (keywords, domains, sources)
-│   │       └── style.py        # Style presets (NEEDS FIX)
-│   └── utils/
-│       ├── system_check.py     # Hardware detection
-│       └── logger.py           # Logging utility
-│
-├── data/                   # Data Storage
-│   ├── aieat_news.db           # Main SQLite database
-│   └── models/                 # (Legacy - models now in Ollama)
-│
-├── benchmark_test/         # Benchmarking Scripts
-│   ├── LoRA/                   # Training data (side project)
-│   └── results/                # Benchmark outputs
-│
-├── scraper_archive/        # Historical Scraper Versions (Reference Only)
-└── run_ui.py               # Application entry point
+│   │   ├── prompt_builder.py   # Translation prompts (DYNAMIC)
+│   │   └── scraper_service.py  # News discovery
+│   ├── ui/pages/           # Flet UI pages
+│   │   ├── dashboard.py        # Main news list + batch processing
+│   │   ├── detail.py           # Article detail + translation
+│   │   ├── config.py           # Settings + threshold
+│   │   ├── style.py            # Translation style presets
+│   │   └── about.py            # About page
+│   └── config/             # JSON configs
+├── data/
+│   ├── aieat_news.db       # Main database
+│   └── schema.sql          # Database schema
+├── .agent/
+│   ├── skills/             # Domain-specific patterns
+│   ├── workflows/          # Step-by-step processes
+│   └── rules/              # Always-on context rules
+└── training_data/          # Fine-tuning dataset
 ```
 
 ---
 
-## Backend Services
+## 🎯 Key Components
 
-| Service | File | Purpose |
-|---------|------|---------|
-| **BackendAPI** | `backend_api.py` | Main API - orchestrates all operations |
-| **DatabaseManager** | `database_manager.py` | SQLite CRUD for articles, sources, config |
-| **InferenceController** | `ai_engine.py` | LLM scoring & translation via **Ollama** |
-| **ScraperService** | `scraper_service.py` | News discovery (RSS/Sitemap/Homepage) |
+### Prompt Builder (`app/services/prompt_builder.py`)
+- Builds translation prompts from **Style UI settings**
+- Respects ALL settings: `tone`, `headline_length`, `body_length`, `include_*`
+- **NO HARDCODED text** - everything configurable by user
 
----
-
-## Database Schema (aieat_news.db)
-
-**Core Tables:**
-- `articles_meta` - Article metadata (headline, source, date, score)
-- `article_content` - Full article content
-- `article_translated` - Thai translations
-- `sources` - News source configuration
-- `keywords` - Scoring keywords
-- `domains` - Content domain categories
-- `system_profile` - App settings
-- `styles` - Writing style presets
+### Style Settings Used
+| Setting | Used In Prompt | Effect |
+|---------|----------------|--------|
+| `tone` | ✅ Yes | Writing style (conversational/professional) |
+| `headline_length` | ✅ Yes | Short/Medium/Long |
+| `body_length` | ✅ Yes | Short/Medium/Long |
+| `include_hashtags` | ✅ Yes | Adds hashtag instruction |
+| `include_analysis` | ✅ Yes | Adds analysis section |
+| `custom_instructions` | ✅ Yes | User custom context |
 
 ---
 
-## Known Issues
+## 🚫 Anti-Patterns (NEVER DO THESE)
 
-| Issue | Status |
-|-------|--------|
-| Can't delete keywords | ❌ Broken |
-| Can't delete domains | ❌ Broken |
-| Style Setting not working | ❌ Broken |
-| Sources CRUD | ⚠️ Untested |
-| Ollama not auto-starting | ⚠️ Shows error, manual start needed |
-
----
-
-## Coding Standards
-
-- **Type hints** required for all functions
-- **Docstrings** for classes and public methods
-- **UI updates** must call `page.update()` after state changes
-- **Ollama calls** use `requests` library to API endpoints
-- **Error handling** for Ollama connection failures
+1. ❌ **NEVER** use `api/generate` for Typhoon → Use `api/chat`
+2. ❌ **NEVER** assume `published_at` exists → Use `COALESCE()`
+3. ❌ **NEVER** put `on_change` inside Dropdown constructor
+4. ❌ **NEVER** run long operations on main UI thread
+5. ❌ **NEVER** use raw `threading.Thread` + `page.update()` in Flet
+6. ❌ **NEVER** hardcode text in prompt builder → Everything from Style settings
 
 ---
 
-## Model Configuration
+## 📦 Deployment
 
-Models are managed by **Ollama**, not local GGUF files.
-
+To build standalone .exe:
 ```bash
-# Pull recommended model
-ollama pull scb10x/typhoon2.5-qwen3-4b
-
-# Pull translation model (optional)
-ollama pull translategemma:4b
-
-# List models
-ollama list
+python -m PyInstaller build_app.spec --noconfirm --clean
 ```
+
+Output: `dist/AIEAT_News_Analyzer/`
 
 ---
 
-## DO NOT
+## 🔄 Workflows
 
-- ❌ Reference llama-cpp-python (removed)
-- ❌ Add CPU/GPU toggles (Ollama handles automatically)
-- ❌ Look for GGUF files in data/models (obsolete)
-- ❌ Modify scraper_archive/ files (reference only)
+Use `/switch-task` to change between tasks.
+Read `SESSION_HANDOFF.md` for current priorities.

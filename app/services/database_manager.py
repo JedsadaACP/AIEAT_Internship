@@ -32,26 +32,42 @@ class DatabaseManager:
         Initialize database connection.
         
         Args:
-            db_name: Database filename in data/ directory
+            db_name: Database filename in data/ directory OR ':memory:'
         """
-        # Calculate paths relative to project root
-        base_dir = os.path.dirname(os.path.abspath(__file__))
-        project_root = os.path.dirname(os.path.dirname(base_dir))
+        # Calculate paths using centralized path utility
+        from app.utils.paths import get_data_dir
+        data_dir = get_data_dir()
         
-        self.db_path = os.path.join(project_root, "data", db_name)
-        self.schema_path = os.path.join(project_root, "data", "schema.sql")
-        
-        # Initialize DB if needed
-        if not os.path.exists(self.db_path):
-            logger.warning(f"Database not found at: {self.db_path}")
-            logger.info("Initializing database from schema...")
-            self._initialize_db()
+        if db_name == ":memory:":
+            self.db_path = ":memory:"
+            self.schema_path = os.path.join(data_dir, "schema.sql")
         else:
-            logger.info(f"Database connected: {self.db_path}")
+            db_filename = os.path.basename(db_name)
+            self.db_path = os.path.join(data_dir, db_filename)
+            self.schema_path = os.path.join(data_dir, "schema.sql")
+            
+            # Initialize DB if needed
+            if not os.path.exists(self.db_path):
+                logger.warning(f"Database not found at: {self.db_path}")
+                logger.info("Initializing database from schema...")
+                self._initialize_db()
+            else:
+                logger.info(f"Database connected: {self.db_path}")
         
         # Cache status IDs for performance
+        # For :memory:, this will fail if schema not loaded first, 
+        # so we wrap in try-except or handle in caller
         self._status_cache: Dict[str, int] = {}
-        self._load_status_cache()
+        self._persistent_conn = None
+        
+        try:
+            self._load_status_cache()
+        except Exception as e:
+            logger.warning(f"Status cache load failed (normal for new :memory: DB): {e}")
+    
+    def set_persistent_connection(self, conn: sqlite3.Connection):
+        """Set a persistent connection for testing (e.g. :memory:)."""
+        self._persistent_conn = conn
     
     @contextmanager
     def get_connection(self):
@@ -63,9 +79,26 @@ class DatabaseManager:
                 cursor = conn.cursor()
                 ...
         """
+        # If persistent connection is set (for tests), use it directly
+        if self._persistent_conn:
+            # We don't close persistent connections automatically
+            # The caller (conftest.py) must close it.
+            # We also don't commit automatically here to allow transaction control?
+            # Actually, we should probably yield it but NOT close it in finally.
+            try:
+                yield self._persistent_conn
+                self._persistent_conn.commit()
+            except sqlite3.Error as e:
+                self._persistent_conn.rollback()
+                logger.error(f"Persistent DB error: {e}")
+                raise DatabaseConnectionError(f"Failed persistent op: {e}")
+            return
+
         conn = None
         try:
             conn = sqlite3.connect(self.db_path)
+            conn.execute("PRAGMA journal_mode=WAL;")
+            conn.execute("PRAGMA synchronous=NORMAL;")
             conn.row_factory = sqlite3.Row
             conn.execute("PRAGMA foreign_keys = ON")
             yield conn
@@ -401,20 +434,51 @@ class DatabaseManager:
     def add_keyword(self, keyword: str) -> int:
         """Add a new keyword. Returns tag_id."""
         with self.get_connection() as conn:
-            cursor = conn.execute("""
-                INSERT INTO tags (tag_name, tag_type, weight_score, status_id)
-                VALUES (?, 'Keyword', 1, ?)
-            """, (keyword, self.get_status_id('Active')))
-            return cursor.lastrowid
+            # Check existing first to return correct ID
+            existing = conn.execute(
+                "SELECT tag_id FROM tags WHERE tag_name = ? AND tag_type = 'Keyword'", 
+                (keyword,)
+            ).fetchone()
+            if existing:
+                return existing['tag_id']
+
+            try:
+                cursor = conn.execute("""
+                    INSERT INTO tags (tag_name, tag_type, weight_score, status_id)
+                    VALUES (?, 'Keyword', 1, ?)
+                """, (keyword, self.get_status_id('Active')))
+                return cursor.lastrowid
+            except sqlite3.IntegrityError:
+                # Race condition fallback
+                with self.get_connection() as conn:
+                    return conn.execute(
+                        "SELECT tag_id FROM tags WHERE tag_name = ? AND tag_type = 'Keyword'", 
+                        (keyword,)
+                    ).fetchone()['tag_id']
     
     def add_domain(self, domain: str) -> int:
         """Add a new domain. Returns tag_id."""
         with self.get_connection() as conn:
-            cursor = conn.execute("""
-                INSERT INTO tags (tag_name, tag_type, weight_score, status_id)
-                VALUES (?, 'Domain', 1, ?)
-            """, (domain, self.get_status_id('Active')))
-            return cursor.lastrowid
+            # Check existing first
+            existing = conn.execute(
+                "SELECT tag_id FROM tags WHERE tag_name = ? AND tag_type = 'Domain'", 
+                (domain,)
+            ).fetchone()
+            if existing:
+                return existing['tag_id']
+
+            try:
+                cursor = conn.execute("""
+                    INSERT INTO tags (tag_name, tag_type, weight_score, status_id)
+                    VALUES (?, 'Domain', 1, ?)
+                """, (domain, self.get_status_id('Active')))
+                return cursor.lastrowid
+            except sqlite3.IntegrityError:
+                with self.get_connection() as conn:
+                    return conn.execute(
+                        "SELECT tag_id FROM tags WHERE tag_name = ? AND tag_type = 'Domain'", 
+                        (domain,)
+                    ).fetchone()['tag_id']
     
     def remove_tag(self, tag_id: int):
         """Remove a tag by ID."""
@@ -520,20 +584,20 @@ class DatabaseManager:
                 # Get start of today in local time, then convert to UTC
                 start_of_today_local = now_local.replace(hour=0, minute=0, second=0, microsecond=0)
                 cutoff_utc = start_of_today_local.astimezone(pytz.UTC).strftime('%Y-%m-%d %H:%M:%S')
-                sql += f" AND m.published_at >= '{cutoff_utc}'"
+                sql += f" AND COALESCE(m.published_at, m.scraped_at, m.created_at) >= '{cutoff_utc}'"
             elif date_range == "week":
                 cutoff_local = now_local - timedelta(days=7)
                 cutoff_utc = cutoff_local.astimezone(pytz.UTC).strftime('%Y-%m-%d %H:%M:%S')
-                sql += f" AND m.published_at >= '{cutoff_utc}'"
+                sql += f" AND COALESCE(m.published_at, m.scraped_at, m.created_at) >= '{cutoff_utc}'"
             elif date_range == "month":
                 cutoff_local = now_local - timedelta(days=28)
                 cutoff_utc = cutoff_local.astimezone(pytz.UTC).strftime('%Y-%m-%d %H:%M:%S')
-                sql += f" AND m.published_at >= '{cutoff_utc}'"
+                sql += f" AND COALESCE(m.published_at, m.scraped_at, m.created_at) >= '{cutoff_utc}'"
             elif date_range and date_range.startswith("custom_"):
                 days = int(date_range.split("_")[1])
                 cutoff_local = now_local - timedelta(days=days)
                 cutoff_utc = cutoff_local.astimezone(pytz.UTC).strftime('%Y-%m-%d %H:%M:%S')
-                sql += f" AND m.published_at >= '{cutoff_utc}'"
+                sql += f" AND COALESCE(m.published_at, m.scraped_at, m.created_at) >= '{cutoff_utc}'"
 
             # Keyword Filter (case-insensitive)
             if keyword and keyword.lower() != "all":
@@ -563,32 +627,39 @@ class DatabaseManager:
             return dict(row) if row else None
     
     def add_style(self, name: str, **kwargs) -> int:
-        """Add a new style. Returns style_id."""
+        """Add a new style matching schema.sql."""
         with self.get_connection() as conn:
             cursor = conn.execute("""
-                INSERT INTO styles (name, output_type, persona, structure_headline, 
-                                   structure_lead, structure_body, structure_analysis, content_order)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO styles (
+                    name, output_type, tone, headline_length, 
+                    lead_length, body_length, analysis_length, 
+                    include_keywords, include_hashtags, custom_instructions
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
                 name,
-                kwargs.get('output_type', 'Translation & Rewrite'),
-                kwargs.get('persona', ''),
-                kwargs.get('structure_headline', ''),
-                kwargs.get('structure_lead', ''),
-                kwargs.get('structure_body', ''),
-                kwargs.get('structure_analysis', ''),
-                kwargs.get('content_order', 'headline,lead,body,analysis'),
+                kwargs.get('output_type', 'article'),
+                kwargs.get('tone', 'professional'),
+                kwargs.get('headline_length', 'medium'),
+                kwargs.get('lead_length', 'medium'),
+                kwargs.get('body_length', 'medium'),
+                kwargs.get('analysis_length', 'medium'),
+                kwargs.get('include_keywords', 1),
+                kwargs.get('include_hashtags', 0),
+                kwargs.get('custom_instructions', ''),
             ))
             return cursor.lastrowid
     
     def update_style(self, style_id: int, **kwargs):
-        """Update a style."""
+        """Update a style matching schema.sql."""
+        if not kwargs:
+            return
         with self.get_connection() as conn:
             set_clause = ", ".join(f"{k} = ?" for k in kwargs.keys())
             values = list(kwargs.values()) + [style_id]
             conn.execute(f"""
                 UPDATE styles 
-                SET {set_clause}, updated_at = CURRENT_TIMESTAMP
+                SET {set_clause}
                 WHERE style_id = ?
             """, values)
     

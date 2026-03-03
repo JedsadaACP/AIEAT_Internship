@@ -13,7 +13,9 @@ import hashlib
 import json
 import os
 import re
+import ssl
 import time
+import certifi
 from datetime import datetime, timedelta
 from typing import List, Dict, Tuple, Optional, Any
 from urllib.parse import urlparse, urljoin
@@ -38,12 +40,13 @@ logger = get_app_logger(__name__)
 class ScraperConfig:
     """Load and manage scraper configuration."""
     
-    def __init__(self, config_dir: str = None):
+    def __init__(self, config_dir: str = None, db=None):
         if config_dir is None:
-            base_dir = os.path.dirname(os.path.abspath(__file__))
-            config_dir = os.path.join(os.path.dirname(base_dir), "config")
+            from app.utils.paths import get_config_dir
+            config_dir = get_config_dir()
         
         self.config_dir = config_dir
+        self._db = db
         self._load_configs()
     
     def _load_configs(self):
@@ -52,42 +55,49 @@ class ScraperConfig:
         with open(os.path.join(self.config_dir, "scraper_config.json"), 'r') as f:
             self.settings = json.load(f)
         
-        # Keywords - try DB first, fallback to JSON
+        # Keywords from DB ONLY (No JSON fallback)
         try:
-            from app.services.database_manager import DatabaseManager
-            db = DatabaseManager()
+            db = self._db
+            if db is None:
+                from app.services.database_manager import DatabaseManager
+                db = DatabaseManager()
             self.keywords = db.get_keywords()
             if not self.keywords:
-                raise ValueError("No keywords in DB")
-            logger.info(f"Loaded {len(self.keywords)} keywords from DB")
+                logger.warning("No keywords in DB. Scraper will not match any articles.")
+                self.keywords = []
+            else:
+                logger.info(f"Loaded {len(self.keywords)} keywords from DB")
         except Exception as e:
-            logger.warning(f"DB keywords failed ({e}), using JSON fallback")
-            with open(os.path.join(self.config_dir, "keywords.json"), 'r') as f:
-                self.keywords = json.load(f)
+            logger.error(f"Failed to load keywords from DB: {e}")
+            self.keywords = []
         
         # Paywall signals
         with open(os.path.join(self.config_dir, "paywall_signals.json"), 'r') as f:
             self.paywall = json.load(f)
         
-        # Sources - try DB first, fallback to JSON
+        # Sources from DB ONLY (No JSON fallback)
         try:
-            from app.services.database_manager import DatabaseManager
-            db = DatabaseManager()
+            db = self._db
+            if db is None:
+                from app.services.database_manager import DatabaseManager
+                db = DatabaseManager()
             db_sources = db.get_all_sources()
             if db_sources:
                 self.sources = [{'name': s['domain_name'], 'url': s['base_url']} for s in db_sources]
                 logger.info(f"Loaded {len(self.sources)} sources from DB")
             else:
-                raise ValueError("No sources in DB")
+                logger.warning("No sources in DB. Scraper has nothing to scrape.")
+                self.sources = []
         except Exception as e:
-            logger.warning(f"DB sources failed ({e}), using JSON fallback")
-            with open(os.path.join(self.config_dir, "sources.json"), 'r') as f:
-                self.sources = json.load(f)['sources']
+            logger.error(f"Failed to load sources from DB: {e}")
+            self.sources = []
         
         # Load date_limit_days from DB profile (override JSON config)
         try:
-            from app.services.database_manager import DatabaseManager
-            db = DatabaseManager()
+            db = self._db
+            if db is None:
+                from app.services.database_manager import DatabaseManager
+                db = DatabaseManager()
             profile = db.get_system_profile()
             if profile and profile.get('date_limit_days'):
                 self.settings['date_limit_days'] = profile['date_limit_days']
@@ -179,7 +189,8 @@ class ArticleDiscoverer:
                                     found_urls.append((entry.link, getattr(entry, 'published', '')))
                             if found_urls:
                                 return found_urls, "rss"
-            except Exception:
+            except Exception as e:
+                logger.debug(f"RSS probe failed for {feed_url}: {e}")
                 continue
         return [], "None"
     
@@ -212,7 +223,8 @@ class ArticleDiscoverer:
                                                 lastmod = url_tag.find('lastmod')
                                                 if loc_tag:
                                                     articles.append((loc_tag.text, lastmod.text if lastmod else ''))
-                                except Exception:
+                                except Exception as e:
+                                    logger.debug(f"Sitemap sub-fetch failed for {loc.text}: {e}")
                                     pass
                         
                         # Direct URL list
@@ -224,7 +236,8 @@ class ArticleDiscoverer:
                         
                         if articles:
                             return articles[:max_articles], "sitemap"
-            except Exception:
+            except Exception as e:
+                logger.debug(f"Sitemap probe failed for {sitemap_url}: {e}")
                 continue
         return [], "None"
     
@@ -271,7 +284,7 @@ class ContentExtractor:
         r'\b(Align-Items|Display|Flex|Gap|Var|Border|Background|Margin|Padding|Width|Height|Color|Font|Media|Min-Width|Max-Width)\b',
         r'\b(Center|Solid|None|Important|First-Child|Shrink)\b',
         r'\.Post-[A-Za-z-]+',  # CSS class selectors
-        r'\bLi\b',  # Common HTML element names leaked
+        r'\b(Li|Div|Span|Ul|Ol|Nav|Header|Footer|Section|Article)\b',  # Common HTML element names leaked
     ]
     
     @staticmethod
@@ -322,8 +335,8 @@ class ContentExtractor:
                 text = result.get('text', '')
                 title = result.get('title', '')
                 author = result.get('author', '')
-        except Exception:
-            pass
+        except Exception as e:
+            logger.error(f"Trafilatura extraction failed: {e}")
         
         # Fall back to newspaper if needed
         if not text or len(text) < 200:
@@ -334,8 +347,8 @@ class ContentExtractor:
                 text = article.text
                 title = title or article.title
                 author = author or (', '.join(article.authors) if article.authors else '')
-            except Exception:
-                pass
+            except Exception as e:
+                logger.error(f"Newspaper extraction failed: {e}")
         
         # Clean author name
         author = ContentExtractor.clean_author(author)
@@ -348,7 +361,7 @@ class ScraperService:
     
     def __init__(self, db: DatabaseManager = None, config: ScraperConfig = None):
         self.db = db or DatabaseManager()
-        self.config = config or ScraperConfig()
+        self.config = config or ScraperConfig(db=self.db)
         self.validator = ContentValidator(self.config)
         self.discoverer = ArticleDiscoverer(self.config)
         self.extractor = ContentExtractor()
@@ -398,7 +411,8 @@ class ScraperService:
                         return await response.text(), "fast"
                     elif response.status == 429:
                         await asyncio.sleep(2 ** attempt)
-            except Exception:
+            except Exception as e:
+                logger.error(f"Fetch failed for {url}: {e}")
                 await asyncio.sleep(1)
         
         return None, "failed"
@@ -496,6 +510,9 @@ class ScraperService:
                 logger.error(f"Failed to save article: {e}")
                 self.stats['errors'] += 1
         
+        if new_count == 0 and links:
+            logger.info(f"{name}: Found {len(links)} links, but 0 passed filters (Check keywords/dates)")
+        
         if new_count > 0:
             self.stats['successful_sources'] += 1
         
@@ -534,12 +551,16 @@ class ScraperService:
         # Add User-Agent header to avoid 403 errors
         headers = {"User-Agent": user_agent}
         
+        # Ensure SSL works in frozen executable
+        ssl_context = ssl.create_default_context(cafile=certifi.where())
+        
         # Optimized connection pooling
         connector = aiohttp.TCPConnector(
             limit=concurrent * 2,     # Total connection pool
             limit_per_host=3,         # Max per host
             ttl_dns_cache=300,        # DNS cache 5 min
-            enable_cleanup_closed=True
+            enable_cleanup_closed=True,
+            ssl=ssl_context
         )
         
         # Faster timeout settings

@@ -271,18 +271,17 @@ class DetailPage:
         self.output_container.content = ft.Column([
             ft.ProgressRing(width=40, height=40),
             ft.Container(height=10),
-            ft.Text("Loading AI model...", color=COLORS['text_secondary']),
+            ft.Text("⏳ Translating (AI is thinking...)", color=COLORS['text_secondary']),
             ft.Text("This may take 30-60 seconds", size=10, color=COLORS['text_secondary'])
         ], horizontal_alignment=ft.CrossAxisAlignment.CENTER)
         self.page.update()
         
-        # Run translation in background thread
-        import threading
-        thread = threading.Thread(target=self._run_translation_thread, daemon=True)
-        thread.start()
+        # Run translation via Flet's async task wrapper
+        self.page.run_task(self._run_translation_async)
     
-    def _run_translation_thread(self):
-        """Run translation in background (called from thread)."""
+    async def _run_translation_async(self):
+        """Run translation in background (async task)."""
+        import asyncio
         try:
             # Update status
             self.output_container.content = ft.Column([
@@ -290,13 +289,11 @@ class DetailPage:
                 ft.Container(height=10),
                 ft.Text("Translating with Typhoon 2.5...", color=COLORS['text_secondary']),
             ], horizontal_alignment=ft.CrossAxisAlignment.CENTER)
-            try:
-                self.page.update()
-            except:
-                pass
+            self.page.update()
             
-            # Call translation API
-            result = self.api.translate_article(self.article['article_id'])
+            # Call translation API in a thread to avoid blocking the event loop
+            # self.api.translate_article is synchronous, so we offload it
+            result = await asyncio.to_thread(self.api.translate_article, self.article['article_id'])
             
             if result and result.get('thai_content'):
                 self.detail['thai_content'] = result['thai_content']
@@ -316,7 +313,7 @@ class DetailPage:
                         on_click=self._translate_article
                     )
                 ], horizontal_alignment=ft.CrossAxisAlignment.CENTER)
-                self._show_snackbar("Translation failed. Please try again.", COLORS['error'])
+                self._show_snackbar(f"Translation failed: {error_msg}", COLORS['error'])
         except Exception as ex:
             self.output_container.content = ft.Column([
                 ft.Text(f"Error: {str(ex)}", size=12, color=COLORS['error']),
@@ -330,10 +327,7 @@ class DetailPage:
             self._show_snackbar(f"Error: {str(ex)}", COLORS['error'])
         finally:
             self.is_translating = False
-            try:
-                self.page.update()
-            except:
-                pass
+            self.page.update()
     
     def _regenerate_score(self, e):
         """Regenerate article score."""
@@ -426,8 +420,20 @@ class DetailPage:
     def _copy_to_clipboard(self, text: str):
         """Copy text to clipboard."""
         if text:
-            self.page.set_clipboard(text)
-            self._show_snackbar("Copied to clipboard!", COLORS['success'])
+            try:
+                # Try pyperclip first (more reliable)
+                import pyperclip
+                pyperclip.copy(text)
+                self._show_snackbar("Copied to clipboard!", COLORS['success'])
+            except ImportError:
+                # Fallback to flet clipboard
+                try:
+                    self.page.set_clipboard(text)
+                    self._show_snackbar("Copied to clipboard!", COLORS['success'])
+                except Exception:
+                    self._show_snackbar("Clipboard not available", COLORS['warning'])
+            except Exception as e:
+                self._show_snackbar(f"Copy failed: {e}", COLORS['error'])
         else:
             self._show_snackbar("No content to copy", COLORS['warning'])
     

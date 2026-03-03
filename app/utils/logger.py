@@ -53,6 +53,6 @@ def get_logger(name: str, log_file: str = None) -> logging.Logger:
 # Default application logger with file output
 def get_app_logger(module_name: str) -> logging.Logger:
     """Get logger with default app log file."""
-    base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    log_file = os.path.join(base_dir, 'logs', 'app.log')
+    from app.utils.paths import get_logs_dir
+    log_file = os.path.join(get_logs_dir(), 'app.log')
     return get_logger(module_name, log_file)

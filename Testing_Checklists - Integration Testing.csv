@@ -1,0 +1,24 @@
+Test Case,Operation,Expected Result,Error Scenario,Actual,Status,Note,
+Check Ollama running,GET localhost:11434/api/tags,200 OK,"Not running → ""Please start Ollama""",,,AIEAT ↔ Ollama API,"Integration testing, Is mean yours system, and other system"
+List models,GET /api/tags,JSON list of models,"Empty → ""No models, run ollama pull""",,,,Like Ollama and Your system
+Score article,POST /api/chat,Score 1-7 in response,Timeout 180s → show error,,,,Like Scrape RSS or Raw HTML
+Translate article,POST /api/chat,Thai text,Malformed → parse error,,,,Should Revise
+Handle slow LLM,POST /api/chat (long text),Response within 180s,Timeout → retry or fail,,,,
+Handle connection lost,POST /api/chat,ConnectionError,Reconnect or show error,,,,
+Fetch with aiohttp,GET article_url,HTML content,Fail → fallback to Playwright,,,AIEAT ↔ External Websites,
+Fetch with Playwright,Browser render,Full HTML,Site blocks → skip,,,,
+Detect paywall,GET paywalled page,Paywall signal,"Paywall → mark failed, skip",,,,
+Handle 404,GET bad_url,404 response,Skip article,,,,
+Handle timeout,GET slow_site,No response,"Retry once, then skip",,,,
+Import CSV,Read sources.csv,URLs loaded,FileNotFound → error msg,,,AIEAT ↔ File System,
+Import TXT,Read sources.txt,URLs loaded,Permission → error msg,,,,
+Export CSV,Write articles.csv,File created,Disk issue → error msg,,,,
+Read config,Load scraper_config.json,Settings dict,Parse error → defaults,,,,
+Copy text,page.set_clipboard(),Text in clipboard,Lock → error msg,,,AIEAT ↔ Clipboard,
+Parse valid RSS,feedparser.parse(rss_url),List of entries,"Empty → ""No articles""",,,AIEAT ↔ RSS Feeds,
+Parse invalid RSS,feedparser.parse(bad_xml),bozo=1,"Skip source, log error",,,,
+Extract article URL,entry.link,Valid URL,Missing → skip entry,,,,
+Extract date,entry.published,datetime,Missing → use now(),,,,
+trafilatura extract,HTML page,Clean article text,Fail → try newspaper,,,AIEAT ↔ Content Extraction,
+newspaper extract,HTML page,Title + body,Fail → skip article,,,,
+Short content,< 100 chars,Mark as insufficient,Skip article,,,,
