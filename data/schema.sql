@@ -53,18 +53,32 @@ CREATE TABLE IF NOT EXISTS system_profile (
 );
 
 -- ==========================================
+-- 3.5 USER PROFILES (Intelligence Profiles)
+-- ==========================================
+CREATE TABLE IF NOT EXISTS user_profiles (
+    profile_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    profile_name TEXT NOT NULL UNIQUE,
+    description TEXT,
+    active_style_id INTEGER DEFAULT 1,
+    is_active INTEGER DEFAULT 0,
+    is_system INTEGER DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ==========================================
 -- 4. TAGS (Keywords & Domains)
 -- ==========================================
 CREATE TABLE IF NOT EXISTS tags (
     tag_id INTEGER PRIMARY KEY AUTOINCREMENT,
     tag_name TEXT NOT NULL,
-    tag_type TEXT DEFAULT 'Keyword', -- 'Keyword' or 'Domain'
+    tag_type TEXT DEFAULT 'Keyword',
     weight_score INTEGER DEFAULT 1,
-    status_id INTEGER,               -- Active Status ID
+    status_id INTEGER,
+    profile_id INTEGER DEFAULT 1,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_by TEXT,
-    UNIQUE(tag_name, tag_type),      -- Allow same name for different types
+    UNIQUE(tag_name, tag_type, profile_id),
     FOREIGN KEY (status_id) REFERENCES master_status(status_id)
 );
 
@@ -194,3 +208,43 @@ INSERT OR IGNORE INTO styles (style_id, name, output_type, tone, headline_length
 (1, 'News Article', 'article', 'professional', 'medium', 'medium', 'medium', 0, 1, 1, 'You are a professional news editor. Synthesize the provided content into a comprehensive, fluent Thai news article. Maintain a neutral, journalistic tone. Structure with clear headings.'),
 (2, 'Social Media', 'facebook', 'conversational', 'short', 'short', 'short', 1, 1, 0, 'You are a social media manager for a Tech page. Summarize this news for Facebook/Twitter in Thai. Use an engaging, conversational tone. Use emojis 🚀 and bullet points. Focus on why this matters to the user.'),
 (3, 'Executive Brief', 'summary', 'formal', 'medium', 'short', 'short', 0, 1, 0, NULL);
+
+-- Seed default profiles
+INSERT OR IGNORE INTO user_profiles (profile_id, profile_name, description, active_style_id, is_active, is_system)
+VALUES
+(1, 'Technology & AI', 'AI, software, chips, cloud computing', 1, 1, 1),
+(2, 'Finance & Markets', 'Stock markets, banking, fintech, crypto', 1, 0, 1),
+(3, 'Politics & Policy', 'Government policy, regulation, geopolitics', 1, 0, 1);
+
+-- Seed tags for Profile 1 (Technology & AI)
+INSERT OR IGNORE INTO tags (tag_name, tag_type, weight_score, status_id, profile_id) VALUES
+('A.I.', 'Keyword', 1, (SELECT status_id FROM master_status WHERE status_name = 'Active'), 1),
+('LLM', 'Keyword', 1, (SELECT status_id FROM master_status WHERE status_name = 'Active'), 1),
+('GPU', 'Keyword', 1, (SELECT status_id FROM master_status WHERE status_name = 'Active'), 1),
+('Semiconductor', 'Keyword', 1, (SELECT status_id FROM master_status WHERE status_name = 'Active'), 1),
+('Cloud', 'Keyword', 1, (SELECT status_id FROM master_status WHERE status_name = 'Active'), 1),
+('Technology', 'Domain', 1, (SELECT status_id FROM master_status WHERE status_name = 'Active'), 1),
+('AI Business', 'Domain', 1, (SELECT status_id FROM master_status WHERE status_name = 'Active'), 1),
+('Software Engineering', 'Domain', 1, (SELECT status_id FROM master_status WHERE status_name = 'Active'), 1);
+
+-- Seed tags for Profile 2 (Finance & Markets)
+INSERT OR IGNORE INTO tags (tag_name, tag_type, weight_score, status_id, profile_id) VALUES
+('Stock Market', 'Keyword', 1, (SELECT status_id FROM master_status WHERE status_name = 'Active'), 2),
+('Banking', 'Keyword', 1, (SELECT status_id FROM master_status WHERE status_name = 'Active'), 2),
+('Fintech', 'Keyword', 1, (SELECT status_id FROM master_status WHERE status_name = 'Active'), 2),
+('Cryptocurrency', 'Keyword', 1, (SELECT status_id FROM master_status WHERE status_name = 'Active'), 2),
+('IPO', 'Keyword', 1, (SELECT status_id FROM master_status WHERE status_name = 'Active'), 2),
+('Finance', 'Domain', 1, (SELECT status_id FROM master_status WHERE status_name = 'Active'), 2),
+('Economics', 'Domain', 1, (SELECT status_id FROM master_status WHERE status_name = 'Active'), 2),
+('Investment', 'Domain', 1, (SELECT status_id FROM master_status WHERE status_name = 'Active'), 2);
+
+-- Seed tags for Profile 3 (Politics & Policy)
+INSERT OR IGNORE INTO tags (tag_name, tag_type, weight_score, status_id, profile_id) VALUES
+('Government Policy', 'Keyword', 1, (SELECT status_id FROM master_status WHERE status_name = 'Active'), 3),
+('Regulation', 'Keyword', 1, (SELECT status_id FROM master_status WHERE status_name = 'Active'), 3),
+('Geopolitics', 'Keyword', 1, (SELECT status_id FROM master_status WHERE status_name = 'Active'), 3),
+('Trade War', 'Keyword', 1, (SELECT status_id FROM master_status WHERE status_name = 'Active'), 3),
+('Election', 'Keyword', 1, (SELECT status_id FROM master_status WHERE status_name = 'Active'), 3),
+('Politics', 'Domain', 1, (SELECT status_id FROM master_status WHERE status_name = 'Active'), 3),
+('Public Policy', 'Domain', 1, (SELECT status_id FROM master_status WHERE status_name = 'Active'), 3),
+('International Relations', 'Domain', 1, (SELECT status_id FROM master_status WHERE status_name = 'Active'), 3);
