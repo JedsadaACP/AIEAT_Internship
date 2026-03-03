@@ -445,11 +445,19 @@ class DatabaseManager:
             ).fetchone()
             if existing:
                 return existing['tag_id']
-            cursor = conn.execute("""
-                INSERT INTO tags (tag_name, tag_type, weight_score, status_id, profile_id)
-                VALUES (?, 'Keyword', 1, ?, ?)
-            """, (keyword, self.get_status_id('Active'), profile_id))
-            return cursor.lastrowid
+            try:
+                cursor = conn.execute("""
+                    INSERT INTO tags (tag_name, tag_type, weight_score, status_id, profile_id)
+                    VALUES (?, 'Keyword', 1, ?, ?)
+                """, (keyword, self.get_status_id('Active'), profile_id))
+                return cursor.lastrowid
+            except sqlite3.IntegrityError:
+                # Race condition fallback — re-check
+                row = conn.execute(
+                    "SELECT tag_id FROM tags WHERE tag_name = ? AND tag_type = 'Keyword' AND profile_id = ?",
+                    (keyword, profile_id)
+                ).fetchone()
+                return row['tag_id'] if row else 0
     
     def add_domain(self, domain: str, profile_id: int = None) -> int:
         """Add a domain to specific profile. Returns tag_id."""
@@ -462,11 +470,19 @@ class DatabaseManager:
             ).fetchone()
             if existing:
                 return existing['tag_id']
-            cursor = conn.execute("""
-                INSERT INTO tags (tag_name, tag_type, weight_score, status_id, profile_id)
-                VALUES (?, 'Domain', 1, ?, ?)
-            """, (domain, self.get_status_id('Active'), profile_id))
-            return cursor.lastrowid
+            try:
+                cursor = conn.execute("""
+                    INSERT INTO tags (tag_name, tag_type, weight_score, status_id, profile_id)
+                    VALUES (?, 'Domain', 1, ?, ?)
+                """, (domain, self.get_status_id('Active'), profile_id))
+                return cursor.lastrowid
+            except sqlite3.IntegrityError:
+                # Race condition fallback — re-check
+                row = conn.execute(
+                    "SELECT tag_id FROM tags WHERE tag_name = ? AND tag_type = 'Domain' AND profile_id = ?",
+                    (domain, profile_id)
+                ).fetchone()
+                return row['tag_id'] if row else 0
     
     def remove_tag(self, tag_id: int):
         """Remove a tag by ID."""
@@ -561,15 +577,61 @@ class DatabaseManager:
             except Exception:
                 pass
             
-            # Migrate tags: add profile_id if missing
+            # Migrate tags: add profile_id and fix UNIQUE constraint
             try:
                 cursor = conn.execute("PRAGMA table_info(tags)")
                 columns = [row[1] for row in cursor]
+                
                 if 'profile_id' not in columns:
+                    # Step 1: Add profile_id column
                     conn.execute("ALTER TABLE tags ADD COLUMN profile_id INTEGER DEFAULT 1")
                     logger.info("Added profile_id column to tags table")
-            except Exception:
-                pass
+                
+                # Step 2: Check if UNIQUE constraint includes profile_id
+                # Get current table schema to check constraint
+                schema_row = conn.execute(
+                    "SELECT sql FROM sqlite_master WHERE type='table' AND name='tags'"
+                ).fetchone()
+                
+                if schema_row and 'profile_id' not in (schema_row[0] or '').split('UNIQUE')[1] if 'UNIQUE' in (schema_row[0] or '') else True:
+                    # Rebuild table with correct UNIQUE constraint
+                    logger.info("Rebuilding tags table with profile-scoped UNIQUE constraint...")
+                    
+                    conn.execute("PRAGMA foreign_keys=OFF")
+                    
+                    conn.execute("""
+                        CREATE TABLE IF NOT EXISTS tags_new (
+                            tag_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            tag_name TEXT NOT NULL,
+                            tag_type TEXT DEFAULT 'Keyword',
+                            weight_score INTEGER DEFAULT 1,
+                            status_id INTEGER,
+                            profile_id INTEGER DEFAULT 1,
+                            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                            updated_by TEXT,
+                            UNIQUE(tag_name, tag_type, profile_id),
+                            FOREIGN KEY (status_id) REFERENCES master_status(status_id)
+                        )
+                    """)
+                    
+                    # Copy all existing data
+                    conn.execute("""
+                        INSERT OR IGNORE INTO tags_new 
+                            (tag_id, tag_name, tag_type, weight_score, status_id, profile_id, created_at, updated_at, updated_by)
+                        SELECT tag_id, tag_name, tag_type, weight_score, status_id, 
+                               COALESCE(profile_id, 1), created_at, updated_at, updated_by
+                        FROM tags
+                    """)
+                    
+                    conn.execute("DROP TABLE tags")
+                    conn.execute("ALTER TABLE tags_new RENAME TO tags")
+                    conn.execute("PRAGMA foreign_keys=ON")
+                    
+                    logger.info("Tags table rebuilt with UNIQUE(tag_name, tag_type, profile_id)")
+                    
+            except Exception as e:
+                logger.warning(f"Tags migration: {e}")
             
             # Seed default profiles if empty
             count = conn.execute("SELECT COUNT(*) FROM user_profiles").fetchone()[0]
