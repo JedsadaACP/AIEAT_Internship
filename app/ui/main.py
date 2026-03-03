@@ -12,6 +12,8 @@ from app.ui.pages.dashboard import DashboardPage
 from app.ui.pages.detail import DetailPage
 from app.ui.pages.config import ConfigPage
 from app.ui.pages.style import StylePage
+from app.ui.pages.about import AboutPage
+from app.ui.pages.profiles import ProfilesPage
 from app.services.backend_api import BackendAPI
 
 
@@ -23,6 +25,7 @@ class AIEATApp:
         self.api = BackendAPI()
         self.current_route = 'dashboard'
         self.current_article = None
+        self.page_cache = {}  # Cache for heavy pages
         
         # Page setup
         self.page.title = APP_CONFIG['title']
@@ -38,6 +41,7 @@ class AIEATApp:
         
         # Build UI
         self._build_layout()
+        self.page.update()  # CRITICAL: Register all controls with frontend
     
     def _build_layout(self):
         """Build the main layout with sidebar and content area."""
@@ -77,13 +81,13 @@ class AIEATApp:
     def _refresh_content(self):
         """Refresh the content area."""
         self.content_area.content = self._get_page_content()
-        
+
         # Rebuild sidebar to update selection
         self.page.controls[0].controls[0] = create_sidebar(
             self.page, self.current_route, self._navigate
         )
         self.page.update()
-    
+
     def _get_page_content(self) -> ft.Control:
         """Get the content for current route."""
         # If viewing article detail
@@ -95,43 +99,70 @@ class AIEATApp:
                 self._back_to_dashboard
             ).build()
         
-        # Route-based content
         if self.current_route == 'dashboard':
-            return DashboardPage(self.page, self.api, self._view_article).build()
+            # Check if we have a cached instance
+            if 'dashboard_logic' in self.page_cache:
+                # REFRESH: It's a revisit, so update the state
+                logic = self.page_cache['dashboard_logic']
+                # Safe wrapper in case of weird state
+                try:
+                    logic.refresh_state() 
+                except:
+                    pass
+                return self.page_cache['dashboard_view']
+            else:
+                # NEW: First load, build fresh (state is already fresh)
+                logic = DashboardPage(self.page, self.api, self._view_article)
+                view = logic.build()
+                self.page_cache['dashboard_logic'] = logic
+                self.page_cache['dashboard_view'] = view
+                return view
+            
         elif self.current_route == 'config':
-            return ConfigPage(self.page, self.api).build()
+            # Always rebuild ConfigPage for fresh state
+            if 'config_logic' in self.page_cache:
+                del self.page_cache['config_logic']
+            if 'config_view' in self.page_cache:
+                del self.page_cache['config_view']
+                
+            logic = ConfigPage(self.page, self.api)
+            view = logic.build()
+            self.page_cache['config_logic'] = logic
+            self.page_cache['config_view'] = view
+            return view
+        
+        elif self.current_route == 'profiles':
+            # Always rebuild ProfilesPage for fresh state
+            def on_switch():
+                self.page_cache.clear()
+                self._navigate('dashboard')
+            
+            return ProfilesPage(self.page, self.api, on_switch_callback=on_switch).build()
+             
         elif self.current_route == 'style':
-            return StylePage(self.page, self.api).build()
+            if 'style_logic' in self.page_cache:
+                logic = self.page_cache['style_logic']
+                try:
+                    logic.refresh_state()
+                except Exception as e:
+                    print(f"Style refresh error: {e}")
+                return self.page_cache['style_view']
+            else:
+                logic = StylePage(self.page, self.api)
+                view = logic.build()
+                self.page_cache['style_logic'] = logic
+                self.page_cache['style_view'] = view
+                return view
+                
         elif self.current_route == 'log':
             return ft.Container(
                 padding=40,
                 content=ft.Text("Logs - Coming Soon", size=24)
             )
         elif self.current_route == 'about':
-            return self._build_about()
+            return AboutPage(self.page).build()
         else:
             return ft.Text("Page not found")
-    
-    def _build_about(self) -> ft.Control:
-        """Build the about page."""
-        return ft.Container(
-            padding=40,
-            bgcolor=COLORS['card_bg'],
-            border_radius=10,
-            content=ft.Column([
-                ft.Text(APP_CONFIG['title'], size=32, weight=ft.FontWeight.BOLD),
-                ft.Text(APP_CONFIG['version'], size=16, color=COLORS['text_secondary']),
-                ft.Divider(),
-                ft.Container(height=20),
-                ft.Text("Artificial Intelligence Entrepreneur Association of Thailand (AIEAT)"),
-                ft.Container(height=20),
-                ft.Text("Features:", weight=ft.FontWeight.BOLD),
-                ft.Text("• News scraping from 74 sources"),
-                ft.Text("• AI-powered scoring with keywords"),
-                ft.Text("• Thai translation"),
-                ft.Text("• Configurable domains and keywords"),
-            ], horizontal_alignment=ft.CrossAxisAlignment.CENTER)
-        )
 
 
 def main(page: ft.Page):
@@ -140,4 +171,4 @@ def main(page: ft.Page):
 
 
 if __name__ == "__main__":
-    ft.app(target=main)
+    ft.app(target=main, view=ft.AppView.FLET_APP)

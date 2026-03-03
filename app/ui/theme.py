@@ -30,6 +30,7 @@ APP_CONFIG = {
 # Navigation Items
 NAV_ITEMS = [
     {'label': 'Dashboard', 'icon': 'DASHBOARD', 'route': 'dashboard'},
+    {'label': 'Profiles', 'icon': 'ACCOUNT_CIRCLE', 'route': 'profiles'},
     {'label': 'User Config', 'icon': 'SETTINGS', 'route': 'config'},
     {'label': 'Style Setting', 'icon': 'PALETTE', 'route': 'style'},
     {'label': 'Log', 'icon': 'LIST_ALT', 'route': 'log'},

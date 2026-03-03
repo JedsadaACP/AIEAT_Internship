@@ -11,6 +11,7 @@ from app.services.database_manager import DatabaseManager
 from app.services.scraper_service import ScraperService
 from app.services.ai_engine import InferenceController
 from app.utils.logger import get_app_logger
+from app.utils.exceptions import ModelLoadError
 
 logger = get_app_logger(__name__)
 
@@ -87,17 +88,17 @@ class BackendAPI:
                 stderr=subprocess.DEVNULL,
                 creationflags=subprocess.CREATE_NO_WINDOW
             )
-            # Wait for it to start
+            # Wait for it to start (max 2 seconds, check often)
             for _ in range(10):
-                time.sleep(0.5)
+                time.sleep(0.2) # Faster check
                 try:
-                    r = requests.get("http://localhost:11434/api/tags", timeout=1)
+                    r = requests.get("http://localhost:11434/api/tags", timeout=0.5)
                     if r.status_code == 200:
                         logger.info("Ollama started successfully")
                         return
                 except:
                     continue
-            logger.warning("Ollama did not start in time")
+            logger.warning("Ollama start timed out (it might still be loading)")
         except Exception as e:
             logger.warning(f"Could not auto-start Ollama: {e}")
     
@@ -197,7 +198,60 @@ class BackendAPI:
     def get_active_style(self) -> Optional[Dict]:
         """Get the currently active style."""
         return self.db.get_active_style()
-    
+
+    # ==================== USER PROFILES ====================
+    def get_profiles(self) -> List[Dict]:
+        """Get all user profiles."""
+        return self.db.get_all_profiles()
+
+    def get_active_profile(self) -> Optional[Dict]:
+        """Get the currently active profile."""
+        return self.db.get_active_profile()
+
+    def switch_profile(self, profile_id: int) -> Dict:
+        """Switch user profile and reload AI engine keywords/domains."""
+        try:
+            self.db.switch_active_profile(profile_id)
+            # Reload AI engine's keyword/domain cache if engine exists
+            if self._engine:
+                self._engine._load_configs()
+            profile = self.db.get_active_profile()
+            return {'success': True, 'profile_id': profile_id, 'profile_name': profile['profile_name'] if profile else ''}
+        except Exception as e:
+            logger.error(f"Profile switch failed: {e}")
+            return {'success': False, 'error': str(e)}
+
+    def add_profile(self, profile_name: str, description: str = "", style_id: int = None) -> Dict:
+        """Add a new profile."""
+        try:
+            new_id = self.db.add_profile(profile_name, description, style_id)
+            return {'success': True, 'profile_id': new_id, 'profile_name': profile_name}
+        except Exception as e:
+            logger.error(f"Add profile failed: {e}")
+            return {'success': False, 'error': str(e)}
+
+    def rename_profile(self, profile_id: int, new_name: str) -> Dict:
+        """Rename a profile."""
+        try:
+            success = self.db.rename_profile(profile_id, new_name)
+            if success:
+                return {'success': True}
+            return {'success': False, 'error': 'Cannot rename system profile'}
+        except Exception as e:
+            logger.error(f"Rename profile failed: {e}")
+            return {'success': False, 'error': str(e)}
+
+    def delete_profile(self, profile_id: int) -> Dict:
+        """Delete a profile."""
+        try:
+            success = self.db.delete_profile(profile_id)
+            if success:
+                return {'success': True}
+            return {'success': False, 'error': 'Cannot delete system profile'}
+        except Exception as e:
+            logger.error(f"Delete profile failed: {e}")
+            return {'success': False, 'error': str(e)}
+
     # ==================== ARTICLES ====================
     
     def get_articles(self, limit: int = 100, offset: int = 0, 
@@ -280,13 +334,28 @@ class BackendAPI:
     
     def add_source(self, url: str) -> int:
         """Add a new source from URL. Auto-detects domain name."""
+        # 1. Normalize URL to prevent duplicates (http vs https, www vs non-www)
+        if not url:
+            return 0
+            
+        url = url.strip()
+        if not url.startswith('http'):
+            url = 'https://' + url
+            
+        # Parse for domain
         from urllib.parse import urlparse
         parsed = urlparse(url)
         domain = parsed.netloc or parsed.path.split('/')[0]
+        
         # Clean up domain (remove www.)
         if domain.startswith('www.'):
             domain = domain[4:]
-        return self.db.insert_source(domain, url)
+            
+        # 2. Re-construct standardized URL (https://domain.com)
+        # This matches the 'base_url' UNIQUE constraint logic
+        clean_url = f"https://{domain}"
+            
+        return self.db.insert_source(domain, clean_url)
     
     def delete_source(self, source_id: int):
         """Delete a source by ID."""
@@ -309,6 +378,9 @@ class BackendAPI:
         if self._scraper is None:
             self._scraper = ScraperService(db=self.db)
         
+        # Force reload config from DB to catch user additions
+        self._scraper.config._load_configs()
+        
         sources = self._scraper.config.sources
         if source_limit:
             sources = sources[:source_limit]
@@ -316,7 +388,22 @@ class BackendAPI:
         # Run async scraper with progress callback
         result = asyncio.run(self._scraper.run(sources=sources, progress_callback=progress_callback))
         
-        # Trigger AI Processing (Scoring + Translation)
+        logger.info(f"Scraper complete: {result}")
+        return result
+    
+    def run_ai_processing(self, progress_callback=None, limit: int = 500) -> Dict[str, Any]:
+        """
+        Run AI scoring (and auto-translation) on new articles.
+        
+        Separated from run_scraper() so dashboard can show distinct progress.
+        
+        Args:
+            progress_callback: Function(current, total, message) -> bool
+            limit: Max articles to process (default 500)
+        
+        Returns:
+            Dict with stats: total, scored, translated, errors
+        """
         try:
             from app.services.ai_engine import InferenceController
             ai = InferenceController(db=self.db)
@@ -325,24 +412,30 @@ class BackendAPI:
             profile = self.db.get_system_profile()
             auto_score = profile.get('auto_scoring_status', 0) == 1
             
-            if auto_score:
-                logger.info("Starting AI processing (Auto-Score ON)...")
-                # Run sync or async? process_new_articles is sync in ai_engine.py
-                ai_stats = ai.process_new_articles(limit=100)
-                logger.info(f"AI Processing stats: {ai_stats}")
-                result['ai_stats'] = ai_stats
-                
+            if not auto_score:
+                logger.info("Auto-scoring is OFF, skipping AI processing")
+                return {'total': 0, 'scored': 0, 'translated': 0, 'errors': 0, 'skipped': True}
+            
+            logger.info(f"Starting AI processing (limit={limit})...")
+            ai_stats = ai.process_new_articles(
+                limit=limit,
+                progress_callback=progress_callback
+            )
+            logger.info(f"AI Processing stats: {ai_stats}")
+            return ai_stats
+            
         except Exception as e:
             logger.error(f"AI Processing failed: {e}")
-            
-        logger.info(f"Scraper complete: {result}")
-        return result
+            return {'total': 0, 'scored': 0, 'translated': 0, 'errors': 1, 'error_msg': str(e)}
     
     def score_article(self, article_id: int) -> Dict[str, Any]:
         """Score a single article."""
         if self._engine is None:
             self._engine = InferenceController()
-            self._engine.load_model()
+            try:
+                self._engine.load_model()
+            except ModelLoadError as e:
+                return {'success': False, 'error': f'AI Server Offline. Please run "ollama serve".'}
         
         # Get article content
         detail = self.get_article_detail(article_id)
@@ -366,7 +459,10 @@ class BackendAPI:
         """Translate a single article to Thai."""
         if self._engine is None:
             self._engine = InferenceController(db=self.db)
-            self._engine.load_model()
+            try:
+                self._engine.load_model()
+            except ModelLoadError as e:
+                return {'success': False, 'error': 'AI Server Offline. Please run "ollama serve".'}
         
         detail = self.get_article_detail(article_id)
         if not detail:
@@ -383,22 +479,37 @@ class BackendAPI:
         
         if result and result.get('Body'):
             # Format with markdown sections
-            thai_content = f"## หัวข้อ\n{result.get('Headline', '')}\n\n"
-            thai_content += f"## นำเรื่อง\n{result.get('Lead', '')}\n\n"
-            thai_content += f"## เนื้อหา\n{result.get('Body', '')}\n\n"
-            thai_content += f"## วิเคราะห์\n{result.get('Analysis', '')}"
+            thai_content = f"## หัวข้อ\n{result.get('Headline', '').strip()}\n\n"
+            
+            if result.get('Lead'):
+                thai_content += f"## นำเรื่อง\n{result.get('Lead', '').strip()}\n\n"
+            
+            thai_content += f"## เนื้อหา\n{result.get('Body', '').strip()}\n\n"
+            
+            if result.get('Analysis'):
+                thai_content += f"## วิเคราะห์\n{result.get('Analysis', '').strip()}\n\n"
+                
+            if result.get('Source'):
+                thai_content += f"**ที่มา:** {result.get('Source', '').strip()}\n\n"
+            
+            if result.get('Hashtags'):
+                thai_content += f"\n{result.get('Hashtags', '').strip()}"
             
             self.db.update_thai_content(article_id, thai_content)
             return {'success': True, 'thai_content': thai_content, 'chars': len(thai_content)}
         
         return {'success': False, 'error': 'Translation failed'}
 
-    def batch_process_articles(self, action: str, date_range: str, keyword: str = None, min_score: int = 0):
+    def batch_process_articles(self, action: str, date_range: str, keyword: str = None, min_score: int = 0, stop_callback=None):
         """
         Batch process articles (Generator).
         Yields: (processed_count, total_count, current_article_status)
         """
         target_status = 'New' if action == 'score' else 'Scored'
+        
+        # FIX: If scoring, ignore min_score (New articles have 0 score)
+        if action == 'score':
+            min_score = 0
         
         # Debug logging
         print(f"\n=== BATCH PROCESS START ===")
@@ -424,6 +535,12 @@ class BackendAPI:
         # 2. Iterate and process
         success_count = 0
         for i, article_id in enumerate(article_ids):
+            # CHECK STOP CALLBACK
+            if stop_callback and stop_callback():
+                print("⚠️ Stop signal received in backend!")
+                yield (i, total, "Stopped by user")
+                return
+
             try:
                 print(f"Processing {i+1}/{total}: ID {article_id}")
                 if action == 'score':
