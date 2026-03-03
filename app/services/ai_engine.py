@@ -67,20 +67,37 @@ class InferenceController:
     
     def _load_configs(self):
         """Load scoring and translation configs."""
-        base_dir = os.path.dirname(os.path.abspath(__file__))
-        config_dir = os.path.join(os.path.dirname(base_dir), 'config')
+        from app.utils.paths import get_config_dir
+        config_dir = get_config_dir()
         
         # Load scoring config
         scoring_path = os.path.join(config_dir, 'llm_scoring_config.json')
-        with open(scoring_path, 'r', encoding='utf-8') as f:
-            self.scoring_config = json.load(f)
+        try:
+            with open(scoring_path, 'r', encoding='utf-8') as f:
+                self.scoring_config = json.load(f)
+        except (FileNotFoundError, json.JSONDecodeError) as e:
+            logger.error(f"Scoring config missing or corrupt: {scoring_path} - {e}")
+            self.scoring_config = {
+                'system_prompt': 'You are a news scoring assistant.',
+                'user_prompt_template': 'Score this article: {content}',
+                'content_max_chars': 2000
+            }
         self.scoring_prompt_builder = PromptBuilder(self.scoring_config)
         
         # Load keywords from DB first, fallback to JSON
         try:
-            self.keywords = self.db.get_keywords()
-            if not self.keywords:
+            keywords_rows = self.db.get_keywords()
+            if not keywords_rows:
                 raise ValueError("No keywords in DB")
+            # Extract names from rows if they are dicts or objects with 'tag_name'
+            self.keywords = []
+            for k in keywords_rows:
+                if isinstance(k, dict): self.keywords.append(k.get('tag_name', str(k)))
+                elif hasattr(k, 'tag_name'): self.keywords.append(k.tag_name)
+                elif hasattr(k, '__getitem__'): # sqlite3.Row or similar
+                    try: self.keywords.append(k['tag_name'])
+                    except: self.keywords.append(str(k))
+                else: self.keywords.append(str(k))
             logger.info(f"Loaded {len(self.keywords)} keywords from DB")
         except Exception as e:
             logger.warning(f"DB keywords failed ({e}), using JSON fallback")
@@ -94,8 +111,16 @@ class InferenceController:
         
         # Load domains from DB, fallback to config
         try:
-            domains = self.db.get_domains()
-            if domains:
+            domain_rows = self.db.get_domains()
+            if domain_rows:
+                domains = []
+                for d in domain_rows:
+                    if isinstance(d, dict): domains.append(d.get('tag_name', str(d)))
+                    elif hasattr(d, 'tag_name'): domains.append(d.tag_name)
+                    elif hasattr(d, '__getitem__'):
+                        try: domains.append(d['tag_name'])
+                        except: domains.append(str(d))
+                    else: domains.append(str(d))
                 self.domain = ', '.join(domains)
                 logger.info(f"Loaded {len(domains)} domains from DB")
             else:
@@ -106,8 +131,16 @@ class InferenceController:
         
         # Load translation config
         translation_path = os.path.join(config_dir, 'llm_translation_config.json')
-        with open(translation_path, 'r', encoding='utf-8') as f:
-            self.translation_config = json.load(f)
+        try:
+            with open(translation_path, 'r', encoding='utf-8') as f:
+                self.translation_config = json.load(f)
+        except (FileNotFoundError, json.JSONDecodeError) as e:
+            logger.error(f"Translation config missing or corrupt: {translation_path} - {e}")
+            self.translation_config = {
+                'system_prompt': 'You are a Thai translator.',
+                'user_prompt_template': 'Translate this article to Thai: {content}',
+                'content_max_chars': 3000
+            }
         self.translation_prompt_builder = PromptBuilder(self.translation_config)
         
         logger.info(f"AI Engine ready: {len(self.keywords)} keywords, domain='{self.domain[:30]}...')")
@@ -149,7 +182,7 @@ class InferenceController:
             else:
                 self.model_name = models[0]
             
-            self.llm = True  # Flag that model is ready
+            self.llm = self.model_name  # Store model name for use in translate_article
             logger.info(f"Ollama ready: {self.model_name}")
             
         except requests.exceptions.ConnectionError:
@@ -159,7 +192,7 @@ class InferenceController:
         except Exception as e:
             raise ModelLoadError(f"Failed to connect to Ollama: {e}")
     
-    def _ollama_chat(self, messages: List[Dict], max_tokens: int = 300, temperature: float = 0.1) -> str:
+    def _ollama_chat(self, messages: List[Dict], max_tokens: int = 300, temperature: float = 0.1, timeout: int = 180) -> str:
         """Send chat request to Ollama."""
         payload = {
             "model": self.model_name,
@@ -167,11 +200,12 @@ class InferenceController:
             "stream": False,
             "options": {
                 "num_predict": max_tokens,
-                "temperature": temperature
+                "temperature": temperature,
+                "stop": ["---", "User:", "Observation:", "<|im_end|>", "<|endoftext|>"]
             }
         }
         
-        r = requests.post(f"{OLLAMA_URL}/api/chat", json=payload, timeout=120)
+        r = requests.post(f"{OLLAMA_URL}/api/chat", json=payload, timeout=timeout)
         r.raise_for_status()
         return r.json().get('message', {}).get('content', '')
     
@@ -297,11 +331,17 @@ class InferenceController:
             
             result = self._extract_json(text)
             
-            # 1. Count keyword matches
+            # 1. Count keyword matches (Strict Whitelist Approach)
             keyword_score = 0
+            # Clean normalization of keys for robust matching
+            normalized_keywords = [k.lower().strip() for k in self.keywords]
+            
             for key, value in result.items():
-                if key not in ('relate', 'raw_response', 'success', 'is_new', 'keyword_score', 'total_score'):
+                # Only score if the key is explicitly in our monitored keywords
+                if key.lower().strip() in normalized_keywords:
                     try:
+                         # Ensure we only add 1 per keyword if binary, or exact value if weighted
+                         # Usually prompts return 0 or 1.
                         keyword_score += int(value)
                     except (ValueError, TypeError):
                         pass
@@ -391,29 +431,32 @@ class InferenceController:
         prompt = build_translation_prompt(style, article_data)
         
         try:
-            # Use direct generate API for single prompt
-            response = requests.post(
-                f"{OLLAMA_URL}/api/generate",
-                json={
-                    "model": self.llm,
-                    "prompt": prompt,
-                    "stream": False,
-                    "options": {
-                        "temperature": 0.2,
-                        "num_predict": 3000
-                    }
-                },
-                timeout=180
+            # Use Chat API (better for Instruct models like Typhoon/Qwen)
+            print(f"DEBUG: Sending request to Ollama (timeout=300s)... Model: {self.llm}")
+            
+            # Construct messages
+            messages = [
+                {"role": "user", "content": prompt}
+            ]
+            
+            text = self._ollama_chat(
+                messages=messages,
+                max_tokens=4000,  # Increased for Web Article style
+                temperature=0.2,
+                timeout=300  # 5 minutes for longer translations
             )
-            
-            if response.status_code != 200:
-                raise InferenceError(f"Ollama error: {response.status_code}")
-            
-            text = response.json().get('response', '')
+            print(f"DEBUG: Response received (len={len(text)} chars)")
             
             # Parse using new JSON-based parser
             result = parse_translation_response(text)
             result['raw_response'] = text
+            
+            # EMERGENCY FALLBACK: If parsing failed or Body is empty, use raw text
+            if not result.get('success') or not result.get('Body'):
+                logger.warning(f"JSON parsing failed for article {article_id}, using raw text fallback")
+                result['Body'] = text
+                result['Headline'] = 'Translation (Raw Output)'
+                result['success'] = True
             
             logger.debug(f"Translated article {article_id}")
             return result
@@ -465,7 +508,7 @@ class InferenceController:
         return result
     
     def process_new_articles(self, limit: int = 100, translate_threshold: int = 7,
-                             progress_callback = None) -> Dict:
+                             progress_callback = None, stop_callback = None) -> Dict:
         """
         Process new articles: score all, translate high-score ones.
         
@@ -473,6 +516,7 @@ class InferenceController:
             limit: Max articles to process
             translate_threshold: Score needed for translation (default 7 = max)
             progress_callback: Optional callback(current, total, article_headline)
+            stop_callback: Optional callback() -> bool to stop execution
         
         Returns:
             Stats dict
@@ -498,11 +542,22 @@ class InferenceController:
         }
         
         for i, article in enumerate(articles):
+            # Check stop signal
+            if stop_callback and stop_callback():
+                logger.info("AI processing stopped by user")
+                break
+
             article_id = article['article_id']
             headline = article.get('headline', '')[:50]
             
             if progress_callback:
-                progress_callback(i + 1, total, headline)
+                # Callback format: (current, total, message)
+                # We reuse the scraper's progress bar format
+                msg = f"AI Scoring: {headline}"
+                should_continue = progress_callback(i + 1, total, msg)
+                if should_continue is False:
+                    logger.info("AI processing stopped by user via UI")
+                    break
             
             # Get full content
             full_article = self.db.get_article_by_id(article_id)
@@ -516,6 +571,7 @@ class InferenceController:
             date = full_article.get('published_at', '')
             
             # Score article
+            logger.info(f"Scoring {i+1}/{total}: {headline}")  # VISIBLE IN TERMINAL NOW
             score_result = self.score_article(
                 article_id=article_id,
                 url=url,

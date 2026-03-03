@@ -200,19 +200,16 @@ class BackendAPI:
         return self.db.get_active_style()
 
     # ==================== USER PROFILES ====================
-    def get_profiles(self) -> List[Dict]:
+    def get_profiles(self):
         """Get all user profiles."""
         return self.db.get_all_profiles()
-
-    def get_active_profile(self) -> Optional[Dict]:
+    def get_active_profile(self):
         """Get the currently active profile."""
         return self.db.get_active_profile()
-
-    def switch_profile(self, profile_id: int) -> Dict:
-        """Switch user profile and reload AI engine keywords/domains."""
+    def switch_profile(self, profile_id: int):
+        """Switch user profile."""
         try:
             self.db.switch_active_profile(profile_id)
-            # Reload AI engine's keyword/domain cache if engine exists
             if self._engine:
                 self._engine._load_configs()
             profile = self.db.get_active_profile()
@@ -220,8 +217,7 @@ class BackendAPI:
         except Exception as e:
             logger.error(f"Profile switch failed: {e}")
             return {'success': False, 'error': str(e)}
-
-    def add_profile(self, profile_name: str, description: str = "", style_id: int = None) -> Dict:
+    def add_profile(self, profile_name: str, description: str = "", style_id: int = None):
         """Add a new profile."""
         try:
             new_id = self.db.add_profile(profile_name, description, style_id)
@@ -229,29 +225,21 @@ class BackendAPI:
         except Exception as e:
             logger.error(f"Add profile failed: {e}")
             return {'success': False, 'error': str(e)}
-
-    def rename_profile(self, profile_id: int, new_name: str) -> Dict:
+    def rename_profile(self, profile_id: int, new_name: str):
         """Rename a profile."""
         try:
             success = self.db.rename_profile(profile_id, new_name)
-            if success:
-                return {'success': True}
-            return {'success': False, 'error': 'Cannot rename system profile'}
+            return {'success': True} if success else {'success': False, 'error': 'Cannot rename system profile'}
         except Exception as e:
-            logger.error(f"Rename profile failed: {e}")
             return {'success': False, 'error': str(e)}
-
-    def delete_profile(self, profile_id: int) -> Dict:
+    def delete_profile(self, profile_id: int):
         """Delete a profile."""
         try:
             success = self.db.delete_profile(profile_id)
-            if success:
-                return {'success': True}
-            return {'success': False, 'error': 'Cannot delete system profile'}
+            return {'success': True} if success else {'success': False, 'error': 'Cannot delete system profile'}
         except Exception as e:
-            logger.error(f"Delete profile failed: {e}")
             return {'success': False, 'error': str(e)}
-
+    
     # ==================== ARTICLES ====================
     
     def get_articles(self, limit: int = 100, offset: int = 0, 
@@ -334,25 +322,27 @@ class BackendAPI:
     
     def add_source(self, url: str) -> int:
         """Add a new source from URL. Auto-detects domain name."""
+        # 1. Normalize URL to prevent duplicates (http vs https, www vs non-www)
         if not url:
             return 0
-        
+            
         url = url.strip()
         if not url.startswith('http'):
             url = 'https://' + url
-        
+            
+        # Parse for domain
         from urllib.parse import urlparse
         parsed = urlparse(url)
         domain = parsed.netloc or parsed.path.split('/')[0]
         
-        domain = domain.lower().strip()
+        # Clean up domain (remove www.)
         if domain.startswith('www.'):
             domain = domain[4:]
-        
-        domain = domain.rstrip('/.')
-        
+            
+        # 2. Re-construct standardized URL (https://domain.com)
+        # This matches the 'base_url' UNIQUE constraint logic
         clean_url = f"https://{domain}"
-        
+            
         return self.db.insert_source(domain, clean_url)
     
     def delete_source(self, source_id: int):

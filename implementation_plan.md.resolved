@@ -1,0 +1,43 @@
+# AIEAT Project Plan Breakdown (For Your Review)
+
+This document divides the entire remaining project into 4 distinct phases so you can review and approve them step-by-step before we involve the Worker LLM.
+
+---
+
+### PHASE 1: Pre-Deployment Code Fixes
+**Goal:** Fix the 4 major UX bugs so the app is smooth enough for testers to actually evaluate its features.
+**Who does this:** The Worker LLM (after you approve)
+**The Steps:**
+1.  **Stop the App from Freezing:** Change [database_manager.py](file:///c:/Users/pechj/Desktop/AIEAT_Internship/app/services/database_manager.py) to use `PRAGMA WAL`. This allows the scraper to save articles in the background without locking your mouse or keyboard.
+2.  **Add "Waiting for AI" Notifications:** Change [detail.py](file:///c:/Users/pechj/Desktop/AIEAT_Internship/app/ui/pages/detail.py) so the Translate button clearly says `"⏳ Translating..."` when you click it. Add a global popup message when a background translation finally finishes.
+3.  **Add "Ollama Offline" Catch:** Check if Ollama is running when the app starts. If it isn't, pop up a friendly warning instead of throwing raw Python errors.
+
+---
+
+### PHASE 2: Building the Final Installer
+**Goal:** Package the newly fixed code into a single, clean file that mimics a real enterprise deployment.
+**Who does this:** You (with my guidance)
+**The Steps:**
+1.  Run the command: `pyinstaller build_app.spec`.
+2.  Verify the new `AIEAT_App.exe` appears in your `dist` folder.
+
+---
+
+### PHASE 3: Virtual Machine Deployment & Setup
+**Goal:** Create a sterile testing environment that perfectly simulates an end-user's workstation.
+**Who does this:** You
+**The Steps:**
+1.  Copy the new `.exe` file onto your Virtual Machine.
+2.  Install Ollama on the VM (if not already there) and download the model: `ollama pull scb10x/typhoon2.5-qwen3-4b`.
+3.  Open Google Chrome Remote Desktop on the VM and generate a "Share my screen" link.
+
+---
+
+### PHASE 4: Remote User Acceptance Testing (UAT)
+**Goal:** Gather undeniable, real-world proof that your app works, to present to your supervisor on Friday.
+**Who does this:** Your 2-3 Testers (while you observe safely)
+**The Steps:**
+1.  Send the testers the Chrome Remote Desktop link.
+2.  Give them your written [UAT_User_Scenario_Script.md](file:///c:/Users/pechj/Desktop/AIEAT_Internship/UAT_User_Scenario_Script.md) and tell them to complete the scenario.
+3.  Observe them silently. Take notes on what they find confusing or interesting. 
+4.  Write one final slide for your Friday presentation: **"UAT Findings & Next Steps"**, summarizing their feedback.

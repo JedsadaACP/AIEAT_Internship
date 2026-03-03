@@ -54,7 +54,7 @@ class AIEATApp:
         self.page.add(
             ft.Row(
                 controls=[
-                    create_sidebar(self.page, self.current_route, self._navigate),
+                    create_sidebar(self.page, self.current_route, self._navigate, api=self.api),
                     self.content_area
                 ],
                 expand=True,
@@ -81,13 +81,13 @@ class AIEATApp:
     def _refresh_content(self):
         """Refresh the content area."""
         self.content_area.content = self._get_page_content()
-
+        
         # Rebuild sidebar to update selection
         self.page.controls[0].controls[0] = create_sidebar(
-            self.page, self.current_route, self._navigate
+            self.page, self.current_route, self._navigate, api=self.api
         )
         self.page.update()
-
+    
     def _get_page_content(self) -> ft.Control:
         """Get the content for current route."""
         # If viewing article detail
@@ -118,6 +118,12 @@ class AIEATApp:
                 self.page_cache['dashboard_view'] = view
                 return view
             
+        elif self.current_route == 'profiles':
+            def on_switch():
+                self.page_cache.clear()
+                self._navigate('dashboard')
+            return ProfilesPage(self.page, self.api, on_switch_callback=on_switch).build()
+            
         elif self.current_route == 'config':
             # Always rebuild ConfigPage for fresh state
             if 'config_logic' in self.page_cache:
@@ -130,15 +136,7 @@ class AIEATApp:
             self.page_cache['config_logic'] = logic
             self.page_cache['config_view'] = view
             return view
-        
-        elif self.current_route == 'profiles':
-            # Always rebuild ProfilesPage for fresh state
-            def on_switch():
-                self.page_cache.clear()
-                self._navigate('dashboard')
             
-            return ProfilesPage(self.page, self.api, on_switch_callback=on_switch).build()
-             
         elif self.current_route == 'style':
             if 'style_logic' in self.page_cache:
                 logic = self.page_cache['style_logic']
@@ -163,6 +161,27 @@ class AIEATApp:
             return AboutPage(self.page).build()
         else:
             return ft.Text("Page not found")
+    
+    def _build_about(self) -> ft.Control:
+        """Build the about page."""
+        return ft.Container(
+            padding=40,
+            bgcolor=COLORS['card_bg'],
+            border_radius=10,
+            content=ft.Column([
+                ft.Text(APP_CONFIG['title'], size=32, weight=ft.FontWeight.BOLD),
+                ft.Text(APP_CONFIG['version'], size=16, color=COLORS['text_secondary']),
+                ft.Divider(),
+                ft.Container(height=20),
+                ft.Text("Artificial Intelligence Entrepreneur Association of Thailand (AIEAT)"),
+                ft.Container(height=20),
+                ft.Text("Features:", weight=ft.FontWeight.BOLD),
+                ft.Text("• News scraping from 74 sources"),
+                ft.Text("• AI-powered scoring with keywords"),
+                ft.Text("• Thai translation"),
+                ft.Text("• Configurable domains and keywords"),
+            ], horizontal_alignment=ft.CrossAxisAlignment.CENTER)
+        )
 
 
 def main(page: ft.Page):

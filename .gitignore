@@ -67,3 +67,28 @@ models/*.bin
 # Temporary files
 *.tmp
 *.temp
+
+# Build Artifacts
+dist/
+build/
+installer_output/
+installer/
+*.spec.bak
+
+# App Backup (installed app copy)
+AIEAT_App_backup/
+
+# Training Data (large)
+training_data/
+
+# Temp scripts
+check_tables.py
+check_tags.py
+nul
+
+# Agent/AI working files
+.gemini/
+.agent/
+.agents/
+_agent/
+_agents/

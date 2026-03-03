@@ -50,9 +50,17 @@ class OllamaController:
         
         # Load keywords from DB first, fallback to JSON
         try:
-            self.keywords = self.db.get_keywords()
-            if not self.keywords:
+            keywords_rows = self.db.get_keywords()
+            if not keywords_rows:
                 raise ValueError("No keywords in DB")
+            self.keywords = []
+            for k in keywords_rows:
+                if isinstance(k, dict): self.keywords.append(k.get('tag_name', str(k)))
+                elif hasattr(k, 'tag_name'): self.keywords.append(k.tag_name)
+                elif hasattr(k, '__getitem__'): # sqlite3.Row
+                    try: self.keywords.append(k['tag_name'])
+                    except: self.keywords.append(str(k))
+                else: self.keywords.append(str(k))
             logger.info(f"Loaded {len(self.keywords)} keywords from DB")
         except Exception as e:
             logger.warning(f"DB keywords failed ({e}), using JSON fallback")
@@ -61,13 +69,25 @@ class OllamaController:
                 with open(keywords_path, 'r') as f:
                     self.keywords = json.load(f)
         
-        # Load domain
+        # Load domain from DB, fallback to config
         try:
-            self.domain = self.db.get_domain()
-            if not self.domain:
-                raise ValueError("No domain in DB")
-        except:
-            self.domain = self.scoring_config.get('domain', 'Technology, Economics, and AI Business')
+            domain_rows = self.db.get_domains()
+            if domain_rows:
+                domains = []
+                for d in domain_rows:
+                    if isinstance(d, dict): domains.append(d.get('tag_name', str(d)))
+                    elif hasattr(d, 'tag_name'): domains.append(d.tag_name)
+                    elif hasattr(d, '__getitem__'):
+                        try: domains.append(d['tag_name'])
+                        except: domains.append(str(d))
+                    else: domains.append(str(d))
+                self.domain = ', '.join(domains)
+                logger.info(f"Loaded {len(domains)} domains from DB")
+            else:
+                self.domain = self.scoring_config.get('domains', '')
+        except Exception as e:
+            logger.warning(f"DB domains failed ({e}), using config fallback")
+            self.domain = self.scoring_config.get('domains', '')
         
         # Load translation config
         translation_path = os.path.join(config_dir, 'llm_translation_config.json')
@@ -175,8 +195,8 @@ class OllamaController:
             json_match = re.search(r'\{[^{}]+\}', response)
             if json_match:
                 scores = json.loads(json_match.group())
-                # Normalize to 0/1
-                return {k: (1 if v else 0) for k, v in scores.items()}
+                # Return raw scores (not normalized to 0/1) for better accuracy
+                return {str(k): v for k, v in scores.items()}
         except:
             pass
         
@@ -201,7 +221,11 @@ class OllamaController:
         
         user_prompt = self.translation_config.get('user_prompt_template', 
             "Translate the following text to Thai:\n\n{content}").format(
-            content=content[:3000]
+            content=content[:3000],
+            url="N/A",
+            author="Unknown",
+            date="Today",
+            publisher="AIEAT"
         )
         
         # Generate with more tokens for translation

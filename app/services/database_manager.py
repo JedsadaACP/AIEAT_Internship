@@ -32,26 +32,43 @@ class DatabaseManager:
         Initialize database connection.
         
         Args:
-            db_name: Database filename in data/ directory
+            db_name: Database filename in data/ directory OR ':memory:'
         """
-        # Calculate paths relative to project root
-        base_dir = os.path.dirname(os.path.abspath(__file__))
-        project_root = os.path.dirname(os.path.dirname(base_dir))
+        # Calculate paths using centralized path utility
+        from app.utils.paths import get_data_dir
+        data_dir = get_data_dir()
         
-        self.db_path = os.path.join(project_root, "data", db_name)
-        self.schema_path = os.path.join(project_root, "data", "schema.sql")
-        
-        # Initialize DB if needed
-        if not os.path.exists(self.db_path):
-            logger.warning(f"Database not found at: {self.db_path}")
-            logger.info("Initializing database from schema...")
-            self._initialize_db()
+        if db_name == ":memory:":
+            self.db_path = ":memory:"
+            self.schema_path = os.path.join(data_dir, "schema.sql")
         else:
-            logger.info(f"Database connected: {self.db_path}")
+            db_filename = os.path.basename(db_name)
+            self.db_path = os.path.join(data_dir, db_filename)
+            self.schema_path = os.path.join(data_dir, "schema.sql")
+            
+            # Initialize DB if needed
+            if not os.path.exists(self.db_path):
+                logger.warning(f"Database not found at: {self.db_path}")
+                logger.info("Initializing database from schema...")
+                self._initialize_db()
+            else:
+                logger.info(f"Database connected: {self.db_path}")
         
         # Cache status IDs for performance
+        # For :memory:, this will fail if schema not loaded first, 
+        # so we wrap in try-except or handle in caller
         self._status_cache: Dict[str, int] = {}
-        self._load_status_cache()
+        self._persistent_conn = None
+        
+        try:
+            self._load_status_cache()
+            self.ensure_profiles_table()  # <-- ADD THIS LINE
+        except Exception as e:
+            logger.warning(f"Status cache load failed (normal for new :memory: DB): {e}")
+    
+    def set_persistent_connection(self, conn: sqlite3.Connection):
+        """Set a persistent connection for testing (e.g. :memory:)."""
+        self._persistent_conn = conn
     
     @contextmanager
     def get_connection(self):
@@ -63,9 +80,26 @@ class DatabaseManager:
                 cursor = conn.cursor()
                 ...
         """
+        # If persistent connection is set (for tests), use it directly
+        if self._persistent_conn:
+            # We don't close persistent connections automatically
+            # The caller (conftest.py) must close it.
+            # We also don't commit automatically here to allow transaction control?
+            # Actually, we should probably yield it but NOT close it in finally.
+            try:
+                yield self._persistent_conn
+                self._persistent_conn.commit()
+            except sqlite3.Error as e:
+                self._persistent_conn.rollback()
+                logger.error(f"Persistent DB error: {e}")
+                raise DatabaseConnectionError(f"Failed persistent op: {e}")
+            return
+
         conn = None
         try:
             conn = sqlite3.connect(self.db_path)
+            conn.execute("PRAGMA journal_mode=WAL;")
+            conn.execute("PRAGMA synchronous=NORMAL;")
             conn.row_factory = sqlite3.Row
             conn.execute("PRAGMA foreign_keys = ON")
             yield conn
@@ -147,26 +181,21 @@ class DatabaseManager:
     def insert_source(self, domain_name: str, base_url: str, 
                       scraper_type: str = 'RSS') -> int:
         """
-        Insert a new source. Returns source_id, or 0 if duplicate.
+        Insert a new source.
+        
+        Returns:
+            source_id of inserted source
         """
         status_id = self.get_status_id('Online') or 6
         
         with self.get_connection() as conn:
-            existing = conn.execute(
-                "SELECT source_id FROM sources WHERE base_url = ?", (base_url,)
-            ).fetchone()
-            if existing:
-                return existing['source_id']
-            
             cursor = conn.execute("""
-                INSERT OR IGNORE INTO sources (domain_name, base_url, scraper_type, status_id)
+                INSERT INTO sources (domain_name, base_url, scraper_type, status_id)
                 VALUES (?, ?, ?, ?)
             """, (domain_name, base_url, scraper_type, status_id))
             conn.commit()
-            if cursor.lastrowid:
-                logger.info(f"Inserted source: {domain_name}")
-                return cursor.lastrowid
-            return 0
+            logger.info(f"Inserted source: {domain_name}")
+            return cursor.lastrowid
     
     def get_or_create_source(self, domain_name: str, base_url: str) -> int:
         """Get source ID or create if not exists."""
@@ -388,30 +417,27 @@ class DatabaseManager:
         with self.get_connection() as conn:
             cursor = conn.execute("""
                 SELECT tag_name FROM tags
-                WHERE tag_type = 'Keyword' 
-                AND status_id = ?
+                WHERE tag_type = 'Keyword' AND status_id = ?
                 AND profile_id = (SELECT profile_id FROM user_profiles WHERE is_active = 1)
                 ORDER BY tag_id
             """, (self.get_status_id('Active'),))
             return [row['tag_name'] for row in cursor]
-
+    
     def get_domains(self) -> List[str]:
         """Get active domains for the current profile."""
         with self.get_connection() as conn:
             cursor = conn.execute("""
                 SELECT tag_name FROM tags
-                WHERE tag_type = 'Domain' 
-                AND status_id = ?
+                WHERE tag_type = 'Domain' AND status_id = ?
                 AND profile_id = (SELECT profile_id FROM user_profiles WHERE is_active = 1)
                 ORDER BY tag_id
             """, (self.get_status_id('Active'),))
             return [row['tag_name'] for row in cursor]
-
+    
     def add_keyword(self, keyword: str, profile_id: int = None) -> int:
-        """Add a new keyword to a specific profile. Returns tag_id."""
+        """Add a keyword to specific profile. Returns tag_id."""
         if profile_id is None:
             profile_id = self._get_active_profile_id()
-        
         with self.get_connection() as conn:
             existing = conn.execute(
                 "SELECT tag_id FROM tags WHERE tag_name = ? AND tag_type = 'Keyword' AND profile_id = ?",
@@ -419,7 +445,6 @@ class DatabaseManager:
             ).fetchone()
             if existing:
                 return existing['tag_id']
-
             try:
                 cursor = conn.execute("""
                     INSERT INTO tags (tag_name, tag_type, weight_score, status_id, profile_id)
@@ -427,17 +452,17 @@ class DatabaseManager:
                 """, (keyword, self.get_status_id('Active'), profile_id))
                 return cursor.lastrowid
             except sqlite3.IntegrityError:
-                with self.get_connection() as conn:
-                    return conn.execute(
-                        "SELECT tag_id FROM tags WHERE tag_name = ? AND tag_type = 'Keyword' AND profile_id = ?",
-                        (keyword, profile_id)
-                    ).fetchone()['tag_id']
-
+                # Race condition fallback — re-check
+                row = conn.execute(
+                    "SELECT tag_id FROM tags WHERE tag_name = ? AND tag_type = 'Keyword' AND profile_id = ?",
+                    (keyword, profile_id)
+                ).fetchone()
+                return row['tag_id'] if row else 0
+    
     def add_domain(self, domain: str, profile_id: int = None) -> int:
-        """Add a new domain to a specific profile. Returns tag_id."""
+        """Add a domain to specific profile. Returns tag_id."""
         if profile_id is None:
             profile_id = self._get_active_profile_id()
-        
         with self.get_connection() as conn:
             existing = conn.execute(
                 "SELECT tag_id FROM tags WHERE tag_name = ? AND tag_type = 'Domain' AND profile_id = ?",
@@ -445,7 +470,6 @@ class DatabaseManager:
             ).fetchone()
             if existing:
                 return existing['tag_id']
-
             try:
                 cursor = conn.execute("""
                     INSERT INTO tags (tag_name, tag_type, weight_score, status_id, profile_id)
@@ -453,32 +477,31 @@ class DatabaseManager:
                 """, (domain, self.get_status_id('Active'), profile_id))
                 return cursor.lastrowid
             except sqlite3.IntegrityError:
-                with self.get_connection() as conn:
-                    return conn.execute(
-                        "SELECT tag_id FROM tags WHERE tag_name = ? AND tag_type = 'Domain' AND profile_id = ?",
-                        (domain, profile_id)
-                    ).fetchone()['tag_id']
-
+                # Race condition fallback — re-check
+                row = conn.execute(
+                    "SELECT tag_id FROM tags WHERE tag_name = ? AND tag_type = 'Domain' AND profile_id = ?",
+                    (domain, profile_id)
+                ).fetchone()
+                return row['tag_id'] if row else 0
+    
     def remove_tag(self, tag_id: int):
         """Remove a tag by ID."""
         with self.get_connection() as conn:
             conn.execute("DELETE FROM tags WHERE tag_id = ?", (tag_id,))
-
+    
     def delete_keyword(self, keyword: str, profile_id: int = None):
-        """Delete a keyword by name from specific profile."""
+        """Delete a keyword from specific profile."""
         if profile_id is None:
             profile_id = self._get_active_profile_id()
         with self.get_connection() as conn:
-            conn.execute("DELETE FROM tags WHERE tag_name = ? AND tag_type = 'Keyword' AND profile_id = ?", 
-                        (keyword, profile_id))
-
+            conn.execute("DELETE FROM tags WHERE tag_name = ? AND tag_type = 'Keyword' AND profile_id = ?", (keyword, profile_id))
+    
     def delete_domain(self, domain: str, profile_id: int = None):
-        """Delete a domain by name from specific profile."""
+        """Delete a domain from specific profile."""
         if profile_id is None:
             profile_id = self._get_active_profile_id()
         with self.get_connection() as conn:
-            conn.execute("DELETE FROM tags WHERE tag_name = ? AND tag_type = 'Domain' AND profile_id = ?", 
-                        (domain, profile_id))
+            conn.execute("DELETE FROM tags WHERE tag_name = ? AND tag_type = 'Domain' AND profile_id = ?", (domain, profile_id))
 
     def add_article_tags(self, article_id: int, tag_names: List[str]):
         """Link an article to tags (keywords)."""
@@ -532,7 +555,7 @@ class DatabaseManager:
     def ensure_profiles_table(self):
         """Create user_profiles table if missing and migrate tags for profile_id."""
         with self.get_connection() as conn:
-            # Create table using execute (not executescript which auto-commits)
+            # Create table (execute, NOT executescript — executescript auto-commits and breaks context)
             conn.execute("""
                 CREATE TABLE IF NOT EXISTS user_profiles (
                     profile_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -551,115 +574,95 @@ class DatabaseManager:
                 columns = [row[1] for row in cursor]
                 if 'is_system' not in columns:
                     conn.execute("ALTER TABLE user_profiles ADD COLUMN is_system INTEGER DEFAULT 0")
-                    logger.info("Added is_system column to user_profiles table")
-            except Exception as e:
-                logger.warning(f"is_system migration check failed: {e}")
+            except Exception:
+                pass
             
-            # Migrate tags table: add profile_id if missing
+            # Migrate tags: add profile_id and fix UNIQUE constraint
             try:
                 cursor = conn.execute("PRAGMA table_info(tags)")
                 columns = [row[1] for row in cursor]
+                
                 if 'profile_id' not in columns:
+                    # Step 1: Add profile_id column
                     conn.execute("ALTER TABLE tags ADD COLUMN profile_id INTEGER DEFAULT 1")
                     logger.info("Added profile_id column to tags table")
+                
+                # Step 2: Check if UNIQUE constraint includes profile_id
+                # Get current table schema to check constraint
+                schema_row = conn.execute(
+                    "SELECT sql FROM sqlite_master WHERE type='table' AND name='tags'"
+                ).fetchone()
+                
+                if schema_row and 'profile_id' not in (schema_row[0] or '').split('UNIQUE')[1] if 'UNIQUE' in (schema_row[0] or '') else True:
+                    # Rebuild table with correct UNIQUE constraint
+                    logger.info("Rebuilding tags table with profile-scoped UNIQUE constraint...")
+                    
+                    conn.execute("PRAGMA foreign_keys=OFF")
+                    
+                    conn.execute("""
+                        CREATE TABLE IF NOT EXISTS tags_new (
+                            tag_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            tag_name TEXT NOT NULL,
+                            tag_type TEXT DEFAULT 'Keyword',
+                            weight_score INTEGER DEFAULT 1,
+                            status_id INTEGER,
+                            profile_id INTEGER DEFAULT 1,
+                            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                            updated_by TEXT,
+                            UNIQUE(tag_name, tag_type, profile_id),
+                            FOREIGN KEY (status_id) REFERENCES master_status(status_id)
+                        )
+                    """)
+                    
+                    # Copy all existing data
+                    conn.execute("""
+                        INSERT OR IGNORE INTO tags_new 
+                            (tag_id, tag_name, tag_type, weight_score, status_id, profile_id, created_at, updated_at, updated_by)
+                        SELECT tag_id, tag_name, tag_type, weight_score, status_id, 
+                               COALESCE(profile_id, 1), created_at, updated_at, updated_by
+                        FROM tags
+                    """)
+                    
+                    conn.execute("DROP TABLE tags")
+                    conn.execute("ALTER TABLE tags_new RENAME TO tags")
+                    conn.execute("PRAGMA foreign_keys=ON")
+                    
+                    logger.info("Tags table rebuilt with UNIQUE(tag_name, tag_type, profile_id)")
+                    
             except Exception as e:
-                logger.warning(f"Tags migration check failed: {e}")
+                logger.warning(f"Tags migration: {e}")
             
-            # Seed default profiles if empty (with is_system = 1 for system profiles)
+            # Seed default profiles if empty
             count = conn.execute("SELECT COUNT(*) FROM user_profiles").fetchone()[0]
             if count == 0:
-                # Use style_id 1 for all as safe default (avoids FK issues if style 3 doesn't exist)
                 first_style = conn.execute("SELECT style_id FROM styles ORDER BY style_id LIMIT 1").fetchone()
                 safe_style = first_style[0] if first_style else 1
-                conn.execute("""
-                    INSERT OR IGNORE INTO user_profiles (profile_id, profile_name, description, active_style_id, is_active, is_system)
-                    VALUES (1, 'Technology & AI', 'AI, software, chips, cloud computing', ?, 1, 1)
-                """, (safe_style,))
-                conn.execute("""
-                    INSERT OR IGNORE INTO user_profiles (profile_id, profile_name, description, active_style_id, is_active, is_system)
-                    VALUES (2, 'Finance & Markets', 'Stock markets, banking, fintech, crypto', ?, 0, 1)
-                """, (safe_style,))
-                conn.execute("""
-                    INSERT OR IGNORE INTO user_profiles (profile_id, profile_name, description, active_style_id, is_active, is_system)
-                    VALUES (3, 'Politics & Policy', 'Government policy, regulation, geopolitics', ?, 0, 1)
-                """, (safe_style,))
+                conn.execute("INSERT OR IGNORE INTO user_profiles (profile_id, profile_name, description, active_style_id, is_active, is_system) VALUES (1, 'Technology & AI', 'AI, software, chips, cloud computing', ?, 1, 1)", (safe_style,))
+                conn.execute("INSERT OR IGNORE INTO user_profiles (profile_id, profile_name, description, active_style_id, is_active, is_system) VALUES (2, 'Finance & Markets', 'Stock markets, banking, fintech, crypto', ?, 0, 1)", (safe_style,))
+                conn.execute("INSERT OR IGNORE INTO user_profiles (profile_id, profile_name, description, active_style_id, is_active, is_system) VALUES (3, 'Politics & Policy', 'Government policy, regulation, geopolitics', ?, 0, 1)", (safe_style,))
             
-            # Ensure system profiles have is_system = 1
             conn.execute("UPDATE user_profiles SET is_system = 1 WHERE profile_id IN (1, 2, 3)")
-            
-            # Seed default tags for each profile if tags table is empty or missing profile tags
-            tag_count = conn.execute("SELECT COUNT(*) FROM tags WHERE profile_id = 1").fetchone()[0]
-            if tag_count == 0:
-                self._seed_default_tags(conn)
-            else:
-                for pid in [2, 3]:
-                    count = conn.execute("SELECT COUNT(*) FROM tags WHERE profile_id = ?", (pid,)).fetchone()[0]
-                    if count == 0:
-                        active_status = self.get_status_id('Active')
-                        if pid == 2:
-                            keywords = ['Stock Market', 'Banking', 'Fintech', 'Cryptocurrency', 'IPO']
-                            domains = ['Finance', 'Economics', 'Investment']
-                        else:
-                            keywords = ['Government Policy', 'Regulation', 'Geopolitics', 'Trade War', 'Election']
-                            domains = ['Politics', 'Public Policy', 'International Relations']
-                        
-                        for kw in keywords:
-                            try:
-                                conn.execute("INSERT OR IGNORE INTO tags (tag_name, tag_type, weight_score, status_id, profile_id) VALUES (?, 'Keyword', 1, ?, ?)", 
-                                           (kw, active_status, pid))
-                            except:
-                                pass
-                        for d in domains:
-                            try:
-                                conn.execute("INSERT OR IGNORE INTO tags (tag_name, tag_type, weight_score, status_id, profile_id) VALUES (?, 'Domain', 1, ?, ?)", 
-                                           (d, active_status, pid))
-                            except:
-                                pass
-            
             logger.info("User profiles table ensured")
-
-    def get_all_profiles(self) -> List[Dict]:
+    
+    def get_all_profiles(self):
         """Get all user profiles."""
         with self.get_connection() as conn:
             cursor = conn.execute("SELECT * FROM user_profiles ORDER BY profile_id")
             return [dict(row) for row in cursor]
-
-    def get_active_profile(self) -> Optional[Dict]:
+    
+    def get_active_profile(self):
         """Get the currently active profile."""
         with self.get_connection() as conn:
             row = conn.execute("SELECT * FROM user_profiles WHERE is_active = 1").fetchone()
             return dict(row) if row else None
-
-    def _get_active_profile_id(self) -> int:
+    
+    def _get_active_profile_id(self):
         """Get the ID of the currently active profile."""
         profile = self.get_active_profile()
         return profile['profile_id'] if profile else 1
-
-    def _seed_default_tags(self, conn):
-        """Seed default tags for all profiles."""
-        active_status = self.get_status_id('Active')
-        keywords_1 = ['A.I.', 'LLM', 'GPU', 'Semiconductor', 'Cloud']
-        domains_1 = ['Technology', 'AI Business', 'Software Engineering']
-        keywords_2 = ['Stock Market', 'Banking', 'Fintech', 'Cryptocurrency', 'IPO']
-        domains_2 = ['Finance', 'Economics', 'Investment']
-        keywords_3 = ['Government Policy', 'Regulation', 'Geopolitics', 'Trade War', 'Election']
-        domains_3 = ['Politics', 'Public Policy', 'International Relations']
-        
-        for i, kw in enumerate(keywords_1, 1):
-            conn.execute("INSERT OR IGNORE INTO tags (tag_id, tag_name, tag_type, weight_score, status_id, profile_id) VALUES (?, ?, 'Keyword', 1, ?, 1)", (i, kw, active_status))
-        for i, d in enumerate(domains_1, 6):
-            conn.execute("INSERT OR IGNORE INTO tags (tag_id, tag_name, tag_type, weight_score, status_id, profile_id) VALUES (?, ?, 'Domain', 1, ?, 1)", (i, d, active_status))
-        for i, kw in enumerate(keywords_2, 9):
-            conn.execute("INSERT OR IGNORE INTO tags (tag_id, tag_name, tag_type, weight_score, status_id, profile_id) VALUES (?, ?, 'Keyword', 1, ?, 2)", (i, kw, active_status))
-        for i, d in enumerate(domains_2, 14):
-            conn.execute("INSERT OR IGNORE INTO tags (tag_id, tag_name, tag_type, weight_score, status_id, profile_id) VALUES (?, ?, 'Domain', 1, ?, 2)", (i, d, active_status))
-        for i, kw in enumerate(keywords_3, 17):
-            conn.execute("INSERT OR IGNORE INTO tags (tag_id, tag_name, tag_type, weight_score, status_id, profile_id) VALUES (?, ?, 'Keyword', 1, ?, 3)", (i, kw, active_status))
-        for i, d in enumerate(domains_3, 22):
-            conn.execute("INSERT OR IGNORE INTO tags (tag_id, tag_name, tag_type, weight_score, status_id, profile_id) VALUES (?, ?, 'Domain', 1, ?, 3)", (i, d, active_status))
-
     def switch_active_profile(self, new_profile_id: int):
-        """Switch active profile and set its preferred style."""
+        """Switch active profile."""
         with self.get_connection() as conn:
             conn.execute("UPDATE user_profiles SET is_active = 0")
             conn.execute("UPDATE user_profiles SET is_active = 1 WHERE profile_id = ?", (new_profile_id,))
@@ -668,17 +671,12 @@ class DatabaseManager:
                 conn.execute("UPDATE styles SET is_active = 0")
                 conn.execute("UPDATE styles SET is_active = 1 WHERE style_id = ?", (row['active_style_id'],))
         logger.info(f"Switched to profile {new_profile_id}")
-
     def add_profile(self, profile_name: str, description: str = "", style_id: int = None) -> int:
-        """Add a new profile. Returns new profile_id. New profiles start with empty tags."""
+        """Add a new profile. Returns new profile_id."""
         with self.get_connection() as conn:
             if style_id is None:
                 style_row = conn.execute("SELECT style_id FROM styles LIMIT 1").fetchone()
-                if style_row:
-                    style_id = style_row['style_id']
-                else:
-                    style_id = 1
-            
+                style_id = style_row['style_id'] if style_row else 1
             cursor = conn.execute("""
                 INSERT INTO user_profiles (profile_name, description, active_style_id, is_active, is_system)
                 VALUES (?, ?, ?, 0, 0)
@@ -686,36 +684,24 @@ class DatabaseManager:
             new_id = cursor.lastrowid
             logger.info(f"Created new profile: {profile_name} (ID: {new_id})")
             return new_id
-
     def rename_profile(self, profile_id: int, new_name: str) -> bool:
-        """Rename a profile. Returns False if profile not found or is system profile."""
+        """Rename a profile. Returns False if system profile."""
         with self.get_connection() as conn:
             row = conn.execute("SELECT is_system FROM user_profiles WHERE profile_id = ?", (profile_id,)).fetchone()
-            if not row:
-                return False
-            if row['is_system'] == 1:
+            if not row or row['is_system'] == 1:
                 logger.warning(f"Cannot rename system profile {profile_id}")
                 return False
-            
             conn.execute("UPDATE user_profiles SET profile_name = ? WHERE profile_id = ?", (new_name, profile_id))
-            logger.info(f"Renamed profile {profile_id} to {new_name}")
             return True
-
     def delete_profile(self, profile_id: int) -> bool:
-        """Delete a profile. Returns False if is_system == 1. If deleting active, switches to profile 1."""
+        """Delete a profile. Returns False if system. Switches to profile 1 if deleting active."""
         with self.get_connection() as conn:
             row = conn.execute("SELECT is_system, is_active FROM user_profiles WHERE profile_id = ?", (profile_id,)).fetchone()
-            if not row:
-                return False
-            if row['is_system'] == 1:
+            if not row or row['is_system'] == 1:
                 logger.warning(f"Cannot delete system profile {profile_id}")
                 return False
-            
             if row['is_active'] == 1:
                 conn.execute("UPDATE user_profiles SET is_active = 1 WHERE profile_id = 1")
-                conn.execute("UPDATE styles SET is_active = 0")
-                conn.execute("UPDATE styles SET is_active = 1 WHERE style_id = 1")
-            
             conn.execute("DELETE FROM tags WHERE profile_id = ?", (profile_id,))
             conn.execute("DELETE FROM user_profiles WHERE profile_id = ?", (profile_id,))
             logger.info(f"Deleted profile {profile_id}")
@@ -762,20 +748,20 @@ class DatabaseManager:
                 # Get start of today in local time, then convert to UTC
                 start_of_today_local = now_local.replace(hour=0, minute=0, second=0, microsecond=0)
                 cutoff_utc = start_of_today_local.astimezone(pytz.UTC).strftime('%Y-%m-%d %H:%M:%S')
-                sql += f" AND m.published_at >= '{cutoff_utc}'"
+                sql += f" AND COALESCE(m.published_at, m.scraped_at, m.created_at) >= '{cutoff_utc}'"
             elif date_range == "week":
                 cutoff_local = now_local - timedelta(days=7)
                 cutoff_utc = cutoff_local.astimezone(pytz.UTC).strftime('%Y-%m-%d %H:%M:%S')
-                sql += f" AND m.published_at >= '{cutoff_utc}'"
+                sql += f" AND COALESCE(m.published_at, m.scraped_at, m.created_at) >= '{cutoff_utc}'"
             elif date_range == "month":
                 cutoff_local = now_local - timedelta(days=28)
                 cutoff_utc = cutoff_local.astimezone(pytz.UTC).strftime('%Y-%m-%d %H:%M:%S')
-                sql += f" AND m.published_at >= '{cutoff_utc}'"
+                sql += f" AND COALESCE(m.published_at, m.scraped_at, m.created_at) >= '{cutoff_utc}'"
             elif date_range and date_range.startswith("custom_"):
                 days = int(date_range.split("_")[1])
                 cutoff_local = now_local - timedelta(days=days)
                 cutoff_utc = cutoff_local.astimezone(pytz.UTC).strftime('%Y-%m-%d %H:%M:%S')
-                sql += f" AND m.published_at >= '{cutoff_utc}'"
+                sql += f" AND COALESCE(m.published_at, m.scraped_at, m.created_at) >= '{cutoff_utc}'"
 
             # Keyword Filter (case-insensitive)
             if keyword and keyword.lower() != "all":
@@ -805,32 +791,39 @@ class DatabaseManager:
             return dict(row) if row else None
     
     def add_style(self, name: str, **kwargs) -> int:
-        """Add a new style. Returns style_id."""
+        """Add a new style matching schema.sql."""
         with self.get_connection() as conn:
             cursor = conn.execute("""
-                INSERT INTO styles (name, output_type, persona, structure_headline, 
-                                   structure_lead, structure_body, structure_analysis, content_order)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO styles (
+                    name, output_type, tone, headline_length, 
+                    lead_length, body_length, analysis_length, 
+                    include_keywords, include_hashtags, custom_instructions
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
                 name,
-                kwargs.get('output_type', 'Translation & Rewrite'),
-                kwargs.get('persona', ''),
-                kwargs.get('structure_headline', ''),
-                kwargs.get('structure_lead', ''),
-                kwargs.get('structure_body', ''),
-                kwargs.get('structure_analysis', ''),
-                kwargs.get('content_order', 'headline,lead,body,analysis'),
+                kwargs.get('output_type', 'article'),
+                kwargs.get('tone', 'professional'),
+                kwargs.get('headline_length', 'medium'),
+                kwargs.get('lead_length', 'medium'),
+                kwargs.get('body_length', 'medium'),
+                kwargs.get('analysis_length', 'medium'),
+                kwargs.get('include_keywords', 1),
+                kwargs.get('include_hashtags', 0),
+                kwargs.get('custom_instructions', ''),
             ))
             return cursor.lastrowid
     
     def update_style(self, style_id: int, **kwargs):
-        """Update a style."""
+        """Update a style matching schema.sql."""
+        if not kwargs:
+            return
         with self.get_connection() as conn:
             set_clause = ", ".join(f"{k} = ?" for k in kwargs.keys())
             values = list(kwargs.values()) + [style_id]
             conn.execute(f"""
                 UPDATE styles 
-                SET {set_clause}, updated_at = CURRENT_TIMESTAMP
+                SET {set_clause}
                 WHERE style_id = ?
             """, values)
     
