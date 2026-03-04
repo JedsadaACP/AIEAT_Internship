@@ -2,13 +2,19 @@
 import os
 import sys
 from PyInstaller.utils.hooks import collect_submodules, collect_data_files
-
+# Collect data files from ALL packages that need them
 trafilatura_datas = collect_data_files('trafilatura')
 newspaper_datas = collect_data_files('newspaper')
-
+justext_datas = collect_data_files('justext')
+certifi_datas = collect_data_files('certifi')
+courlan_datas = collect_data_files('courlan')
+htmldate_datas = collect_data_files('htmldate')
+dateutil_datas = collect_data_files('dateutil')
+charset_norm_datas = collect_data_files('charset_normalizer')
+flet_datas = collect_data_files('flet')
 block_cipher = None
 ROOT = os.path.abspath('.')
-# Collect ALL submodules for packages with C extensions (.pyd files)
+# Collect ALL submodules for packages with C extensions
 extra_imports = []
 for pkg in ['PIL', 'aiohttp', 'lxml', 'charset_normalizer', 'newspaper']:
     extra_imports += collect_submodules(pkg)
@@ -18,11 +24,13 @@ a = Analysis(
     binaries=[],
     datas=[
         ('data/schema.sql', 'data'),
-    ] + trafilatura_datas + newspaper_datas,
+    ] + trafilatura_datas + newspaper_datas + justext_datas
+      + certifi_datas + courlan_datas + htmldate_datas
+      + dateutil_datas + charset_norm_datas + flet_datas,
     hiddenimports=[
         # Flet
         'flet', 'flet_core', 'flet_runtime',
-        # Third-party (pure Python ones)
+        # Third-party
         'feedparser', 'trafilatura', 'bs4', 'requests', 'certifi',
         'multidict', 'yarl', 'async_timeout', 'aiosignal', 'frozenlist', 'brotli',
         'courlan', 'htmldate', 'justext', 'dateutil', 'lxml_html_clean',
@@ -46,14 +54,18 @@ a = Analysis(
     ] + extra_imports,
     hookspath=[],
     excludes=[
+        # AI/ML frameworks (NOT USED - we use Ollama externally)
         'torch', 'tensorflow', 'keras', 'transformers', 'huggingface',
         'scipy', 'sklearn', 'scikit_learn',
         'numpy', 'pandas', 'matplotlib',
         'cv2', 'opencv', 'opencv_python',
+        # Dev tools (NOT NEEDED in prod)
         'pytest', 'jupyter', 'ipython', 'mypy', 'jedi', 'parso',
         'IPython', 'notebook', 'qtconsole', 'jupyter_client',
         'jupyter_core', 'nbformat', 'nbconvert', 'traitlets',
+        # NLP (NOT USED)
         'gensim', 'spacy', 'textblob',
+        # Browser automation (NOT USED)
         'playwright', 'tkinter',
     ],
     cipher=block_cipher,
