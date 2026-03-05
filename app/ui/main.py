@@ -8,6 +8,7 @@ import os
 
 from app.ui.theme import COLORS, APP_CONFIG
 from app.ui.components.sidebar import create_sidebar
+from app.ui.components.topbar import TopBar
 from app.ui.pages.dashboard import DashboardPage
 from app.ui.pages.detail import DetailPage
 from app.ui.pages.config import ConfigPage
@@ -45,6 +46,12 @@ class AIEATApp:
     
     def _build_layout(self):
         """Build the main layout with sidebar and content area."""
+
+        self.top_bar = TopBar(
+            api=self.api, 
+            on_profile_click=lambda _: self._navigate('profiles')
+        )
+
         self.content_area = ft.Container(
             expand=True,
             padding=20,
@@ -55,7 +62,7 @@ class AIEATApp:
             ft.Row(
                 controls=[
                     create_sidebar(self.page, self.current_route, self._navigate, api=self.api),
-                    self.content_area
+                    ft.Column([self.top_bar, self.content_area], expand=True, spacing=0)
                 ],
                 expand=True,
                 spacing=0
@@ -81,6 +88,9 @@ class AIEATApp:
     def _refresh_content(self):
         """Refresh the content area."""
         self.content_area.content = self._get_page_content()
+        
+        # Tell the TopBar component to refresh itself dynamically
+        self.top_bar.refresh()
         
         # Rebuild sidebar to update selection
         self.page.controls[0].controls[0] = create_sidebar(

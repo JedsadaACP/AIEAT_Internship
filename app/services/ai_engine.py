@@ -26,13 +26,16 @@ DEFAULT_MODEL = "scb10x/typhoon2.5-qwen3-4b:latest"
 class PromptBuilder:
     """Builds prompts for scoring and translation."""
     
-    def __init__(self, config: Dict):
+    def __init__(self, config: Dict, org_name: str = ""):
+        self.config = config
+        self.org_name = org_name
         self.system_prompt = config.get('system_prompt', '')
         self.user_template = config.get('user_prompt_template', '')
         self.max_chars = config.get('content_max_chars', 2000)
     
     def build_messages(self, **kwargs) -> List[Dict]:
         """Build chat messages for instruct model."""
+        kwargs['org_name'] = self.org_name
         content = kwargs.get('content', '')
         content_truncated = content[:self.max_chars] if content else ''
         kwargs['content'] = content_truncated
@@ -313,6 +316,11 @@ class InferenceController:
         if not self.llm:
             raise InferenceError("Model not loaded. Call load_model() first.")
         
+        active_prof = self.db.get_active_profile()
+        org_name = active_prof.get('org_name', 'AIEAT') if active_prof else 'AIEAT'
+        self.scoring_prompt_builder.org_name = org_name
+        self.translation_prompt_builder.org_name = org_name
+
         messages = self.scoring_prompt_builder.build_messages(
             url=url,
             author=author or 'Unknown',

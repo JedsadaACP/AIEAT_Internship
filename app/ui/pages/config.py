@@ -60,7 +60,12 @@ class ConfigPage:
 
         # Update Org Name
         if hasattr(self, 'org_name_input'):
-            self.org_name_input.value = profile.get('org_name', 'AIEAT')
+            # FIX: Get active profile from user_profiles table instead of system_profile
+            active_prof = self.api.get_active_profile()
+            if active_prof:
+                self.org_name_input.value = active_prof.get('org_name', 'AIEAT')
+            else:
+                self.org_name_input.value = profile.get('org_name', 'AIEAT')  # Fallback
             try:
                 if self.org_name_input.page:
                     self.org_name_input.update()
@@ -313,8 +318,10 @@ class ConfigPage:
         )
         
         # Organization Name Input - assigned before returning
+        active_prof = self.api.get_active_profile()
+        initial_org_name = active_prof.get('org_name', 'AIEAT') if active_prof else 'AIEAT'
         self.org_name_input = ft.TextField(
-            value=profile.get('org_name', 'AIEAT'),
+            value=initial_org_name,
             read_only=False,  # Now editable
             border_radius=5,
             height=45,
@@ -880,6 +887,10 @@ class ConfigPage:
             
             # Save via API
             self.api.update_config(updates)
+            
+            active_prof = self.api.get_active_profile()
+            if active_prof and 'org_name' in updates:
+                self.api.update_profile_org(active_prof['profile_id'], updates['org_name'])
             
             # Reload model immediately if model changed
             if model_name and model_name != 'none':

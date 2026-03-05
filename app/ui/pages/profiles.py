@@ -80,10 +80,17 @@ class ProfilesPage:
             content=ft.Row([
                 ft.Column([
                     ft.Row([
-                        ft.Text(profile['profile_name'], size=16, weight=ft.FontWeight.BOLD),
+                        ft.Text(profile.get('profile_name', f"Profile {pid}"), size=16, weight=ft.FontWeight.BOLD),
                         *badges,
                     ], spacing=8),
                     ft.Text(profile.get('description', ''), size=12, color=COLORS['text_secondary']),
+                    ft.TextField(
+                        label="Organization Name", 
+                        value=profile.get('org_name', ''), 
+                        height=40, 
+                        text_size=13,
+                        on_submit=lambda e, pid=profile['profile_id']: self.api.update_profile_org(pid, e.control.value)
+                    ),
                 ], expand=True, spacing=5),
                 
                 # Action buttons

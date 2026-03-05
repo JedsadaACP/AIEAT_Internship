@@ -57,21 +57,6 @@ def create_sidebar(page: ft.Page, current_route: str, on_navigate, api=None):
                 # Navigation items
                 ft.Column(controls=nav_items, spacing=2),
                 
-                # Active Profile Display (if api available)
-                *([ 
-                    ft.Divider(height=1, color=ft.Colors.WHITE24),
-                    ft.Container(
-                        padding=ft.padding.symmetric(horizontal=15, vertical=10),
-                        content=ft.Column([
-                            ft.Text("Active Profile", size=10, color=ft.Colors.WHITE54),
-                            ft.Text(
-                                api.get_active_profile()['profile_name'] if api and api.get_active_profile() else 'Default',
-                                size=12, color=ft.Colors.WHITE, weight=ft.FontWeight.W_500
-                            ),
-                        ], spacing=2)
-                    ),
-                ] if api else []),
-                
                 # Spacer
                 ft.Container(expand=True),
                 

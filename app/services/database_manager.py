@@ -577,6 +577,12 @@ class DatabaseManager:
             except Exception:
                 pass
             
+            # Add org_name column if it doesn't exist
+            cursor = conn.execute("PRAGMA table_info(user_profiles)")
+            columns = [info[1] for info in cursor.fetchall()]
+            if 'org_name' not in columns:
+                conn.execute("ALTER TABLE user_profiles ADD COLUMN org_name TEXT DEFAULT ''")
+            
             # Migrate tags: add profile_id and fix UNIQUE constraint
             try:
                 cursor = conn.execute("PRAGMA table_info(tags)")
@@ -671,19 +677,24 @@ class DatabaseManager:
                 conn.execute("UPDATE styles SET is_active = 0")
                 conn.execute("UPDATE styles SET is_active = 1 WHERE style_id = ?", (row['active_style_id'],))
         logger.info(f"Switched to profile {new_profile_id}")
-    def add_profile(self, profile_name: str, description: str = "", style_id: int = None) -> int:
+    def add_profile(self, profile_name: str, description: str = "", style_id: int = None, org_name: str = "") -> int:
         """Add a new profile. Returns new profile_id."""
         with self.get_connection() as conn:
             if style_id is None:
                 style_row = conn.execute("SELECT style_id FROM styles LIMIT 1").fetchone()
                 style_id = style_row['style_id'] if style_row else 1
             cursor = conn.execute("""
-                INSERT INTO user_profiles (profile_name, description, active_style_id, is_active, is_system)
-                VALUES (?, ?, ?, 0, 0)
-            """, (profile_name, description, style_id))
+                INSERT INTO user_profiles (profile_name, description, active_style_id, is_active, is_system, org_name)
+                VALUES (?, ?, ?, 0, 0, ?)
+            """, (profile_name, description, style_id, org_name))
             new_id = cursor.lastrowid
             logger.info(f"Created new profile: {profile_name} (ID: {new_id})")
             return new_id
+
+    def update_profile_org(self, profile_id: int, org_name: str) -> bool:
+        with self.get_connection() as conn:
+            conn.execute("UPDATE user_profiles SET org_name = ? WHERE profile_id = ?", (org_name, profile_id))
+            return True
     def rename_profile(self, profile_id: int, new_name: str) -> bool:
         """Rename a profile. Returns False if system profile."""
         with self.get_connection() as conn:

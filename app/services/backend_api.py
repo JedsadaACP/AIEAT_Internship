@@ -200,6 +200,13 @@ class BackendAPI:
         return self.db.get_active_style()
 
     # ==================== USER PROFILES ====================
+    def update_profile_org(self, profile_id: int, org_name: str):
+        try:
+            self.db.update_profile_org(profile_id, org_name)
+            return {'success': True}
+        except Exception as e:
+            return {'success': False, 'error': str(e)}
+
     def get_profiles(self):
         """Get all user profiles."""
         return self.db.get_all_profiles()
