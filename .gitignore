@@ -78,7 +78,7 @@ AIEAT/
 
 # App Backup (installed app copy)
 AIEAT_App_backup/
-
+AIEAT_Backup/
 # Training Data (large)
 training_data/
 training_data.jsonl
