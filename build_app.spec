@@ -24,6 +24,10 @@ a = Analysis(
     binaries=[],
     datas=[
         ('data/schema.sql', 'data'),
+        ('app/config/scraper_config.json', 'app/config'),
+        ('app/config/paywall_signals.json', 'app/config'),
+        ('app/config/llm_scoring_config.json', 'app/config'),
+        ('app/config/llm_translation_config.json', 'app/config'),
     ] + trafilatura_datas + newspaper_datas + justext_datas
       + certifi_datas + courlan_datas + htmldate_datas
       + dateutil_datas + charset_norm_datas + flet_datas,

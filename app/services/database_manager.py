@@ -759,20 +759,20 @@ class DatabaseManager:
                 # Get start of today in local time, then convert to UTC
                 start_of_today_local = now_local.replace(hour=0, minute=0, second=0, microsecond=0)
                 cutoff_utc = start_of_today_local.astimezone(pytz.UTC).strftime('%Y-%m-%d %H:%M:%S')
-                sql += f" AND COALESCE(m.published_at, m.scraped_at, m.created_at) >= '{cutoff_utc}'"
+                sql += f" AND COALESCE(m.published_at, m.created_at) >= '{cutoff_utc}'"
             elif date_range == "week":
                 cutoff_local = now_local - timedelta(days=7)
                 cutoff_utc = cutoff_local.astimezone(pytz.UTC).strftime('%Y-%m-%d %H:%M:%S')
-                sql += f" AND COALESCE(m.published_at, m.scraped_at, m.created_at) >= '{cutoff_utc}'"
+                sql += f" AND COALESCE(m.published_at, m.created_at) >= '{cutoff_utc}'"
             elif date_range == "month":
                 cutoff_local = now_local - timedelta(days=28)
                 cutoff_utc = cutoff_local.astimezone(pytz.UTC).strftime('%Y-%m-%d %H:%M:%S')
-                sql += f" AND COALESCE(m.published_at, m.scraped_at, m.created_at) >= '{cutoff_utc}'"
+                sql += f" AND COALESCE(m.published_at, m.created_at) >= '{cutoff_utc}'"
             elif date_range and date_range.startswith("custom_"):
                 days = int(date_range.split("_")[1])
                 cutoff_local = now_local - timedelta(days=days)
                 cutoff_utc = cutoff_local.astimezone(pytz.UTC).strftime('%Y-%m-%d %H:%M:%S')
-                sql += f" AND COALESCE(m.published_at, m.scraped_at, m.created_at) >= '{cutoff_utc}'"
+                sql += f" AND COALESCE(m.published_at, m.created_at) >= '{cutoff_utc}'"
 
             # Keyword Filter (case-insensitive)
             if keyword and keyword.lower() != "all":
