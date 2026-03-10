@@ -275,12 +275,14 @@ class DatabaseManager:
         # Normalize date to ISO format for reliable comparison
         normalized_date = self._normalize_date(published_at)
         
+        profile_id = self._get_active_profile_id()
+
         with self.get_connection() as conn:
             cursor = conn.execute("""
-                INSERT INTO articles_meta 
-                (source_id, url_hash, headline, article_url, published_at, author_name, status_id)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-            """, (source_id, url_hash, headline, article_url, normalized_date, author_name, status_id))
+                INSERT INTO articles_meta
+                (source_id, url_hash, headline, article_url, published_at, author_name, status_id, profile_id)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """, (source_id, url_hash, headline, article_url, normalized_date, author_name, status_id, profile_id))
             conn.commit()
             logger.debug(f"Inserted article: {headline[:50]}...")
             return cursor.lastrowid
@@ -348,10 +350,10 @@ class DatabaseManager:
                        c.original_content
                 FROM articles_meta m
                 JOIN article_content c ON m.article_id = c.article_id
-                WHERE m.status_id = ?
+                WHERE m.status_id = ? AND m.profile_id = ?
                 ORDER BY m.created_at DESC
                 LIMIT ?
-            """, (status_id, limit))
+            """, (status_id, self._get_active_profile_id(), limit))
             return [dict(row) for row in cursor]
     
     def get_article_by_id(self, article_id: int) -> Optional[Dict]:
@@ -406,8 +408,9 @@ class DatabaseManager:
                 SELECT ms.status_name, COUNT(m.article_id) as count
                 FROM articles_meta m
                 JOIN master_status ms ON m.status_id = ms.status_id
+                WHERE m.profile_id = ?
                 GROUP BY ms.status_name
-            """)
+            """, (self._get_active_profile_id(),))
             return {row['status_name']: row['count'] for row in cursor}
     
     # ==================== TAGS (Keywords & Domains) ====================
@@ -582,6 +585,13 @@ class DatabaseManager:
             columns = [info[1] for info in cursor.fetchall()]
             if 'org_name' not in columns:
                 conn.execute("ALTER TABLE user_profiles ADD COLUMN org_name TEXT DEFAULT ''")
+
+            # --- Article Silo Migration ---
+            cursor = conn.execute("PRAGMA table_info(articles_meta)")
+            columns = [info[1] for info in cursor.fetchall()]
+            if 'profile_id' not in columns:
+                conn.execute("ALTER TABLE articles_meta ADD COLUMN profile_id INTEGER DEFAULT 1")
+                logger.info("Added profile_id column to articles_meta table")
             
             # Migrate tags: add profile_id and fix UNIQUE constraint
             try:
@@ -742,6 +752,10 @@ class DatabaseManager:
                 WHERE 1=1
             """
             params = []
+
+            # Profile Filter (silo articles by active profile)
+            sql += " AND m.profile_id = ?"
+            params.append(self._get_active_profile_id())
 
             # Status Filter
             if target_status:

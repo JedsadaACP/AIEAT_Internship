@@ -927,9 +927,9 @@ class DashboardPage:
                 JOIN master_status ms ON m.status_id = ms.status_id
                 LEFT JOIN article_tag_map atm ON m.article_id = atm.article_id
                 LEFT JOIN tags t ON atm.tag_id = t.tag_id
-                WHERE 1=1
+                WHERE 1=1 AND m.profile_id = ?
             """
-            params = []
+            params = [self.api.db._get_active_profile_id()]
             
             # Date filter
             if self.filter_date_range == "today":

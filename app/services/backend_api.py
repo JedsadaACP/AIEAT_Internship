@@ -274,15 +274,15 @@ class BackendAPI:
                 JOIN master_status ms ON m.status_id = ms.status_id
                 LEFT JOIN article_tag_map atm ON m.article_id = atm.article_id
                 LEFT JOIN tags t ON atm.tag_id = t.tag_id
-                WHERE m.ai_score >= ?
+                WHERE m.ai_score >= ? AND m.profile_id = ?
             """
-            
+
             if translated_only:
                 sql += " AND c.thai_content IS NOT NULL AND c.thai_content != ''"
-            
+
             sql += " GROUP BY m.article_id ORDER BY m.published_at DESC LIMIT ? OFFSET ?"
-            
-            cursor = conn.execute(sql, (min_score, limit, offset))
+
+            cursor = conn.execute(sql, (min_score, self.db._get_active_profile_id(), limit, offset))
             return [dict(row) for row in cursor]
     
     def get_article_detail(self, article_id: int) -> Optional[Dict]:
