@@ -1487,6 +1487,8 @@ class DashboardPage:
         """Run scraper logic in background thread (async wrapper)."""
         import asyncio
         try:
+            # Capture the main event loop BEFORE entering background thread
+            self._main_loop = asyncio.get_running_loop()
             # Run the blocking scraper in a thread
             result = await asyncio.to_thread(self._run_scraper_sync_logic)
             
@@ -1501,13 +1503,11 @@ class DashboardPage:
         
         # --- Step 1: Scraping ---
         def scrape_progress(current, total_count, source_name):
-            """Update UI with scraping progress."""
+            """Update UI with scraping progress (thread-safe)."""
             self.progress_text.value = f"Scraping {current}/{total_count}: {source_name}"
             self.progress_bar.value = current / total_count if total_count > 0 else 0
-            try:
-                self.page.update()
-            except:
-                pass
+            if hasattr(self, '_main_loop') and self._main_loop:
+                self._main_loop.call_soon_threadsafe(self.page.update)
             return self.is_running
         scrape_result = self.api.run_scraper(progress_callback=scrape_progress)
         
@@ -1516,21 +1516,17 @@ class DashboardPage:
         
         # --- Step 2: AI Processing ---
         def ai_progress(current, total_count, message):
-            """Update UI with AI scoring progress."""
+            """Update UI with AI scoring progress (thread-safe)."""
             self.progress_text.value = f"AI Scoring {current}/{total_count}: {message}"
             self.progress_bar.value = current / total_count if total_count > 0 else None
-            try:
-                self.page.update()
-            except:
-                pass
+            if hasattr(self, '_main_loop') and self._main_loop:
+                self._main_loop.call_soon_threadsafe(self.page.update)
             return self.is_running
         # Show indeterminate state while checking
         self.progress_text.value = "Starting AI analysis..."
         self.progress_bar.value = None  # indeterminate mode
-        try:
-            self.page.update()
-        except:
-            pass
+        if hasattr(self, '_main_loop') and self._main_loop:
+            self._main_loop.call_soon_threadsafe(self.page.update)
         
         ai_result = self.api.run_ai_processing(progress_callback=ai_progress)
         
