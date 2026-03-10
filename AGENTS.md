@@ -1,127 +1,88 @@
 # AGENTS.md - AIEAT Project
 
-> **Universal agent configuration** for AI coding assistants.
-
----
-
 ## 🚀 Quick Start
 
 ```bash
-# Install dependencies
 pip install -r requirements.txt
-
-# Start the application
 python run_ui.py
 
 # Ensure Ollama is running
 ollama serve
-
-# Preferred translation model
 ollama pull scb10x/typhoon2.5-qwen3-4b:latest
 ```
 
 ---
 
-## 📋 Code Style
+## � Rules
 
 - **Python 3.10+** with type hints required
-- **Docstrings** for all classes and public methods
-- **Flet UI**: Use `page.run_task()` for async operations
-- **Error handling**: Log with `logger.error()`, never silent failures
+- **Flet UI**: Use `page.run_task()` for async — **NEVER** raw `threading.Thread` + `page.update()`
+- **NEVER** use `api/generate` for Typhoon → Use `api/chat`
+- **NEVER** assume `published_at` exists → Use `COALESCE()`
+- **NEVER** put `on_change` inside Dropdown constructor
+- **NEVER** hardcode text in prompt builder → Everything from Style settings
 - **After editing**: Run `python -m py_compile <file.py>`
 
----
-
-## 🔧 Tech Stack (DO NOT CHANGE)
-
-| Component | Technology | Notes |
-|-----------|------------|-------|
-| **LLM Backend** | Ollama API | localhost:11434 |
-| **Primary Model** | `scb10x/typhoon2.5-qwen3-4b` | Best for Thai translation |
-| **UI Framework** | Flet | Desktop app |
-| **Database** | SQLite | `data/aieat_news.db` |
-| **Scraping** | aiohttp + BeautifulSoup | Async |
-
-### BANNED Technologies
+### Banned Technologies
 - ❌ llama-cpp-python (removed)
 - ❌ selenium/playwright for scraping
 - ❌ Flask/FastAPI (not needed)
 
 ---
 
-## 📁 Project Structure
+## 🤖 Workflow Orchestration
 
-```
-AIEAT_Internship/
-├── app/
-│   ├── services/           # Backend logic
-│   │   ├── ai_engine.py        # LLM via Ollama
-│   │   ├── ollama_engine.py    # Alternative Ollama controller
-│   │   ├── backend_api.py      # Main API facade
-│   │   ├── database_manager.py # SQLite operations
-│   │   ├── prompt_builder.py   # Translation prompts (DYNAMIC)
-│   │   └── scraper_service.py  # News discovery
-│   ├── ui/pages/           # Flet UI pages
-│   │   ├── dashboard.py        # Main news list + batch processing
-│   │   ├── detail.py           # Article detail + translation
-│   │   ├── config.py           # Settings + threshold
-│   │   ├── style.py            # Translation style presets
-│   │   └── about.py            # About page
-│   └── config/             # JSON configs
-├── data/
-│   ├── aieat_news.db       # Main database
-│   └── schema.sql          # Database schema
-├── .agent/
-│   ├── skills/             # Domain-specific patterns
-│   ├── workflows/          # Step-by-step processes
-│   └── rules/              # Always-on context rules
-└── training_data/          # Fine-tuning dataset
-```
+### 1. Plan Node Default
+- Enter plan mode for ANY non-trivial task (3+ steps or architectural decisions)
+- If something goes sideways, STOP and re-plan immediately — don't keep pushing
+- Use plan mode for verification steps, not just building
+- Write detailed specs upfront to reduce ambiguity
 
----
+### 2. Subagent Strategy
+- Use subagents liberally to keep main context window clean
+- Offload research, exploration, and parallel analysis to subagents
+- For complex problems, throw more compute at it via subagents
+- One task per subagent for focused execution
 
-## 🎯 Key Components
+### 3. Self-Improvement Loop
+- After ANY correction from the user: update `tasks/lessons.md` with the pattern
+- Write rules for yourself that prevent the same mistake
+- Ruthlessly iterate on these lessons until mistake rate drops
+- Review lessons at session start for relevant project
 
-### Prompt Builder (`app/services/prompt_builder.py`)
-- Builds translation prompts from **Style UI settings**
-- Respects ALL settings: `tone`, `headline_length`, `body_length`, `include_*`
-- **NO HARDCODED text** - everything configurable by user
+### 4. Verification Before Done
+- Never mark a task complete without proving it works
+- Diff behavior between main and your changes when relevant
+- Ask yourself: "Would a staff engineer approve this?"
+- Run tests, check logs, demonstrate correctness
 
-### Style Settings Used
-| Setting | Used In Prompt | Effect |
-|---------|----------------|--------|
-| `tone` | ✅ Yes | Writing style (conversational/professional) |
-| `headline_length` | ✅ Yes | Short/Medium/Long |
-| `body_length` | ✅ Yes | Short/Medium/Long |
-| `include_hashtags` | ✅ Yes | Adds hashtag instruction |
-| `include_analysis` | ✅ Yes | Adds analysis section |
-| `custom_instructions` | ✅ Yes | User custom context |
+### 5. Demand Elegance (Balanced)
+- For non-trivial changes: pause and ask "is there a more elegant way?"
+- If a fix feels hacky: "Knowing everything I know now, implement the elegant solution"
+- Skip this for simple, obvious fixes — don't over-engineer
+- Challenge your own work before presenting it
+
+### 6. Autonomous Bug Fixing
+- When given a bug report: just fix it. Don't ask for hand-holding
+- Point at logs, errors, failing tests — then resolve them
+- Zero context switching required from the user
+- Go fix failing CI tests without being told how
 
 ---
 
-## 🚫 Anti-Patterns (NEVER DO THESE)
+## 📝 Task Management
 
-1. ❌ **NEVER** use `api/generate` for Typhoon → Use `api/chat`
-2. ❌ **NEVER** assume `published_at` exists → Use `COALESCE()`
-3. ❌ **NEVER** put `on_change` inside Dropdown constructor
-4. ❌ **NEVER** run long operations on main UI thread
-5. ❌ **NEVER** use raw `threading.Thread` + `page.update()` in Flet
-6. ❌ **NEVER** hardcode text in prompt builder → Everything from Style settings
-
----
-
-## 📦 Deployment
-
-To build standalone .exe:
-```bash
-python -m PyInstaller build_app.spec --noconfirm --clean
-```
-
-Output: `dist/AIEAT_News_Analyzer/`
+1. **Plan First**: Write plan to `tasks/todo.md` with checkable items
+2. **Verify Plan**: Check in before starting implementation
+3. **Track Progress**: Mark items complete as you go
+4. **Explain Changes**: High-level summary at each step
+5. **Document Results**: Add review section to `tasks/todo.md`
+6. **Capture Lessons**: Update `tasks/lessons.md` after corrections
 
 ---
 
-## 🔄 Workflows
+## 💎 Core Principles
 
-Use `/switch-task` to change between tasks.
-Read `SESSION_HANDOFF.md` for current priorities.
+- **Simplicity First**: Make every change as simple as possible. Impact minimal code.
+- **No Laziness**: Find root causes. No temporary fixes. Senior developer standards.
+- **Minimal Impact**: Changes should only touch what's necessary. Avoid introducing bugs.
