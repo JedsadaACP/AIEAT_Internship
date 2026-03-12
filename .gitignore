@@ -118,3 +118,19 @@ task.md.resolved
 AGENTS.md
 task_final_sprint.md
 AGENTS.md
+
+# Archive and artifacts
+archive/
+build/
+dist/
+installer_output/
+installer_output - Copy/
+AIEAT.exe_extracted/
+AIEAT_Backup/
+.pytest_cache/
+__pycache__/
+*.zip
+*.exe
+logs/
+test_results_v2/
+*.db

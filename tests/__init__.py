@@ -1,3 +1,0 @@
-"""
-AIEAT Tests Package
-"""
