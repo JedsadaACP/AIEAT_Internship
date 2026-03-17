@@ -10,6 +10,9 @@ Features:
 import json
 from typing import Dict, Any, Optional
 import re
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def build_translation_prompt(style: Dict, article: Dict) -> str:
@@ -184,7 +187,7 @@ def parse_markdown_format(text: str) -> Dict:
             result['success'] = True
             
     except Exception as e:
-        print(f"Parser Error: {e}")
+        logger.error(f"Parser Error: {e}")
         result['Body'] = text
         result['success'] = True
         

@@ -911,7 +911,7 @@ class ConfigPage:
             
         except Exception as e:
             # Show error snackbar
-            print(f"DEBUG: Save error: {e}")
+            logger.error(f"Save error: {e}")
             snackbar = ft.SnackBar(
                 content=ft.Text(f"Error saving: {str(e)}", color=ft.Colors.WHITE),
                 bgcolor=COLORS['error'],

@@ -1,45 +1,81 @@
-# Contributing to AIEAT News Dashboard
+# Contributing to AIEAT
 
-Thank you for your interest in contributing to the AIEAT News Dashboard! Whether you're fixing bugs, adding new features, or improving documentation, your help is welcome.
+Thank you for your interest in contributing to AIEAT! This document provides guidelines for contributing to the project.
 
-## Architecture Overview
+## Getting Started
 
-The application follows a clean 3-tier architecture:
-1. **Frontend (`app/ui/`)**: Built entirely in Python using Flet. Handles purely UI state.
-2. **Services (`app/services/`)**: 
-   - `scraper_service.py`: High-concurrency async web scraping
-   - `ai_engine.py`: Manages Ollama connection and handles LLM tasks
-   - `database_manager.py`: SQLite transactions and schema control
-   - `backend_api.py`: Orchestrator linking the UI to backend services
-3. **Database (`data/aieat_news.db`)**: Local SQLite storage for articles, user profiles, and logs.
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/JedsadaACP/AIEAT_Internship.git
+   cd AIEAT_Internship
+   ```
 
-## Setting Up Your Environment
-
-1. Fork and clone the repository.
-2. Use Python 3.11 - 3.13.
-3. Install the dependencies:
+2. **Install dependencies**
    ```bash
    pip install -r requirements.txt
    ```
-4. If working on scraping features, ensure `trafilatura` and `justext` are correctly parsing content. 
-5. If working on AI, install [Ollama](https://ollama.com) locally and run the `typhoon2.5` model.
 
-## Adding Features
+3. **Run the application**
+   ```bash
+   python run_ui.py
+   ```
 
-**1. Database Changes:**
-If you need to change the schema, modify `ensure_tables()` in `database_manager.py`. Use SQLite `ALTER TABLE` commands gracefully so existing users do not lose data on update.
+## Prerequisites
 
-**2. UI Changes:**
-Flet components are strictly modularized under `app/ui/components` and `app/ui/pages`. 
-- State should be passed locally within the classes. 
-- Avoid using global `page.session` unless absolutely necessary (the app is single-user desktop).
+- **Python 3.10+** with type hints
+- **Ollama** installed and running locally
+- **Typhoon 2.5** model pulled (`ollama pull scb10x/typhoon2.5-qwen3-4b:latest`)
 
-## Submitting Pull Requests
+## Architecture Overview
 
-1. **Branch cleanly**: Create a feature branch (`git checkout -b feature/your-feature-name`).
-2. **Test your code**: Ensure the `pytest` suite passes.
-3. **No secrets**: Do NOT commit personal Hugging Face tokens, API keys, or large `.gguf` model files. (These are actively `.gitignore`d).
-4. **Push & PR**: Submit a pull request to `main` with a clear description of changes.
+AIEAT is a local-first news intelligence dashboard with the following architecture:
 
-## Compiling for Distribution
-If you change how dependencies are imported (especially NLP or scraping libraries like `newspaper`), you MUST update `build_app.spec` using `collect_data_files()` to ensure PyInstaller bundles the required dictionary lists in the compiled `.exe`.
+- **Flet** - UI framework for the desktop application
+- **SQLite** - Local data storage
+- **Ollama** - Local AI engine (Typhoon 2.5 model) for AI scoring and translation
+- **74+ configurable news sources**
+
+### Key Directories
+
+| Directory | Purpose |
+|-----------|---------|
+| `app/ui/` | UI components (pages, components, theme) |
+| `app/services/` | Backend logic (database, AI engine, scraper) |
+| `data/` | Database schema and SQLite files |
+| `scripts/` | Utility scripts for data management |
+
+## Submitting Changes
+
+1. **Fork** the repository
+2. **Create** a feature branch (`git checkout -b feature/your-feature-name`)
+3. **Make** your changes with proper type hints
+4. **Verify** changes compile correctly:
+   ```bash
+   python -m py_compile app/ui/main.py
+   python -m py_compile app/services/backend_api.py
+   # ... on other edited files
+   ```
+5. **Submit** a Pull Request
+
+## Code Style
+
+- **Python 3.10+** with type hints required
+- Use `page.run_task()` for async operations
+- **NEVER** use raw `threading.Thread` with Flet UI (causes deadlocks)
+- Follow existing code conventions in the project
+- Add logging instead of print statements
+
+## Coding Rules
+
+- Always use `page.run_task()` for async operations in Flet
+- Use `logger.error()` or `logger.debug()` instead of `print()` for errors
+- Avoid hardcoding text in prompts - use Style settings
+- Never commit secrets or API keys
+
+## Questions?
+
+- Open an issue for bugs or feature requests
+- Check the [User Manual](./User_Manual.md) for usage instructions
+- Review existing issues before creating new ones
+
+We appreciate your contributions!

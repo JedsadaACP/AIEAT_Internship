@@ -37,8 +37,18 @@ class AIEATApp:
         self.page.window.height = 800
         
         # Preload AI model in background (non-blocking)
-        import threading
-        threading.Thread(target=self.api.preload_model, daemon=True).start()
+        self.page.run_task(self.api.preload_model)
+        
+        # Check if Ollama is running
+        try:
+            import requests
+            response = requests.get("http://localhost:11434", timeout=2)
+        except Exception:
+            self.page.snack_bar = ft.SnackBar(
+                ft.Text("Warning: Ollama AI Engine is not running. Please launch it from Start Menu."),
+                duration=5000,
+            )
+            self.page.snack_bar.open = True
         
         # Build UI
         self._build_layout()

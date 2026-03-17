@@ -209,22 +209,17 @@ class SourcesDialog:
     def _import_csv(self, e):
         """Handle import CSV."""
         # TODO: Implement file picker and import
-        print("Import CSV clicked")
     
     def _remove_duplicates(self, e):
         """Handle remove duplicates."""
         # TODO: Implement duplicate removal
-        print("Remove duplicates clicked")
     
     def _add_source(self, e):
         """Handle add source."""
         # TODO: Show add source dialog
-        print("Add source clicked")
     
     def _check_source(self, source: dict):
         """Check source status."""
-        print(f"Check source: {source.get('domain_name')}")
     
     def _remove_source(self, source: dict):
         """Remove a source."""
-        print(f"Remove source: {source.get('domain_name')}")

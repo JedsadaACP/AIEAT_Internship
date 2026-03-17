@@ -506,11 +506,6 @@ class BackendAPI:
         if action == 'score':
             min_score = 0
         
-        # Debug logging
-        print(f"\n=== BATCH PROCESS START ===")
-        print(f"Action: {action}, Date: {date_range}, Keyword: {keyword}, MinScore: {min_score}")
-        print(f"Target Status: {target_status}")
-        
         # 1. Get IDs to process
         article_ids = self.db.get_article_ids_by_filter(
             date_range=date_range, 
@@ -520,10 +515,8 @@ class BackendAPI:
         )
         
         total = len(article_ids)
-        print(f"Found {total} articles to process: {article_ids[:10]}...")
         
         if total == 0:
-            print("No articles found!")
             yield (0, 0, "No articles found")
             return
 
@@ -532,34 +525,29 @@ class BackendAPI:
         for i, article_id in enumerate(article_ids):
             # CHECK STOP CALLBACK
             if stop_callback and stop_callback():
-                print("⚠️ Stop signal received in backend!")
                 yield (i, total, "Stopped by user")
                 return
 
             try:
-                print(f"Processing {i+1}/{total}: ID {article_id}")
                 if action == 'score':
                     res = self.score_article(article_id)
                     score = res.get('total_score', 0)
                     if res.get('success'):
                         success_count += 1
                     status = f"Scored ID {article_id}: {score}"
-                    print(f"  Result: {res}")
                 elif action == 'translate':
                     res = self.translate_article(article_id)
                     if res.get('success'):
                         success_count += 1
                     status = f"Translated ID {article_id}: {'OK' if res.get('success') else 'Failed'}"
-                    print(f"  Result: {res.get('success')}")
                 
                 yield (i + 1, total, status)
                 
             except Exception as e:
                 logger.error(f"Batch error on ID {article_id}: {e}")
-                print(f"  ERROR: {e}")
                 yield (i + 1, total, f"Error ID {article_id}: {e}")
         
-        print(f"=== BATCH COMPLETE: {success_count}/{total} successful ===")
+        # Batch complete
     
     def unload_model(self):
         """Unload AI model to free GPU memory."""

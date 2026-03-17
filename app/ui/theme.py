@@ -33,7 +33,6 @@ NAV_ITEMS = [
     {'label': 'Profiles', 'icon': 'ACCOUNT_CIRCLE', 'route': 'profiles'},
     {'label': 'User Config', 'icon': 'SETTINGS', 'route': 'config'},
     {'label': 'Style Setting', 'icon': 'PALETTE', 'route': 'style'},
-    {'label': 'Log', 'icon': 'LIST_ALT', 'route': 'log'},
     {'label': 'About', 'icon': 'INFO', 'route': 'about'},
 ]
 

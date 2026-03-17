@@ -1,62 +1,54 @@
-# AIEAT News Dashboard
+# AIEAT - AI-Enhanced Article Tracker v1.0.0
 
-A powerful, local-first news curation and translation application built by the Artificial Intelligence Entrepreneur Association of Thailand (AIEAT). Designed specifically for content writers and social media managers to aggregate, score, and translate AI and Tech news using automated web scraping and localized LLMs.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue)](https://www.python.org/)
+[![Flet](https://img.shields.io/badge/Flet-UI-purple)](https://flet.dev/)
 
-## 🚀 Features
+A local-first news intelligence dashboard that scrapes, scores, and translates articles using a local AI engine. No cloud dependency — everything runs on your machine.
 
-- **Automated Scraping**: Aggregates RSS feeds and sitemaps from 74+ global technology news sources.
-- **Content Extraction**: Advanced HTML parsing using `trafilatura` and `newspaper` to bypass paywalls and cookie banners.
-- **Local AI Engine**: Full integration with `Ollama` running quantized models (e.g., Typhoon 2.5 4B, TranslateGemma) for 100% private, offline inference.
-- **Smart Scoring**: Automatically scores articles from 1-10 based on customized relevance to defined User Profiles and domain keywords.
-- **Automated Translation**: Translates English tech journalism into fluent Thai, customized with system prompts matching your organization's tone.
-- **User Profiles**: Create distinct intelligence profiles (e.g. "Tech Team", "Finance Dept") with separate monitored keywords and organization names.
-- **Desktop UI**: A fast, responsive frontend built with Flet/Flutter for cross-platform ease.
+## What It Is
 
-## 📦 Installation (End Users)
-1. Download `AIEAT_Distribution.zip`
-2. Run `AIEAT_Setup.exe` to install the UI
-3. Run `Install_AI_Engine.bat` to install Ollama and the Typhoon LLM
-4. Launch the application from the Desktop shortcut
+AIEAT is designed for content writers, social media managers, and news analysts who need to:
+- Aggregate news from 74+ configurable sources
+- Automatically score article relevance using AI
+- Translate English articles to Thai with customizable tones
+- Organize content into profile-based silos (Finance, Tech, Politics, etc.)
 
-## 🛠️ Tech Stack
-- **Frontend**: Python + Flet (Flutter)
-- **Backend Core**: Python 3.13
-- **Scraping**: `aiohttp`, `trafilatura`, `feedparser`, `beautifulsoup4`
-- **Database**: SQLite3
-- **AI Backend**: Ollama HTTP API
+## Key Features
 
-## 🏃‍♀️ Development Setup
+- **Multi-Profile Article Silos** — Create separate intelligence profiles with custom keywords
+- **AI Relevance Scoring** — Uses Typhoon 2.5 model to score articles 1-10
+- **Thai Translation** — Localized AI translation with customizable styles
+- **74+ Configurable News Sources** — Add or remove sources easily
+- **Windows Installer** — Optional Ollama setup during installation
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/JedsadaACP/AIEAT_Internship.git
-   cd AIEAT_Internship
-   ```
+## Installation
 
-2. **Install dependencies**
-   ```bash
-   pip install -r requirements.txt
-   ```
+1. Download `AIEAT_Setup.exe` from the [GitHub Releases](https://github.com/JedsadaACP/AIEAT_Internship/releases) page
+2. Run the installer
+3. Optionally install Ollama during setup (recommended for AI features)
 
-3. **Run the application**
-   ```bash
-   python -m app.ui.main
-   ```
+## Quick Start
 
-## 🏗️ Building the Executable
+1. Launch the app
+2. Select a profile (or create a new one)
+3. Add news sources and set keywords
+4. Click **Scrape** to fetch articles
+5. Click **Batch Score** to run AI scoring
+6. Review and translate articles
 
-This project uses `PyInstaller` and `Inno Setup 6` for distribution. Since the project uses specialized NLP scraping dependencies, you must use the custom `.spec` file.
+## Tech Stack
 
-```bash
-# Clean previous builds
-rmdir /s /q dist build
+| Component | Technology |
+|-----------|------------|
+| UI Framework | Python + Flet |
+| Database | SQLite |
+| AI Engine | Ollama (Typhoon 2.5 model) |
 
-# Build standalone executable (bundles missing NLP data files)
-python -m PyInstaller build_app.spec --clean --noconfirm
+## Contributing
 
-# Compile installer (Requires Inno Setup installed)
-"C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installer.iss
-```
+Contributions are welcome! Please read our [Contributing Guide](./CONTRIBUTING.md) for setup instructions and code standards.
 
-## 📄 License
-This project is open-source under the MIT License.
+## License
+
+This project is licensed under the MIT License — see the [LICENSE](./LICENSE) file for details.

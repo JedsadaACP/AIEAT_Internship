@@ -2,6 +2,7 @@
 AIEAT Dashboard Page
 Main news listing with controls - FULLY WIRED TO BACKEND
 """
+import logging
 import flet as ft
 import threading
 import os
@@ -10,6 +11,8 @@ from datetime import datetime, timedelta
 from email.utils import parsedate_to_datetime
 from app.ui.theme import COLORS, get_score_color, APP_CONFIG
 from app.services.backend_api import BackendAPI
+
+logger = logging.getLogger(__name__)
 
 
 def _parse_date_for_sort(date_str: str) -> float:
@@ -770,11 +773,11 @@ class DashboardPage:
                         
                 except Exception as loop_e:
                     # Handle unexpected errors in the loop
-                    print(f"Loop Error: {loop_e}")
+                    logger.error(f"Loop Error: {loop_e}")
                     raise loop_e
             
         except Exception as e:
-            print(f"Batch Error: {e}")
+            logger.error(f"Batch Error: {e}")
             self.batch_status_text.value = f"Error: {str(e)}"
             self.batch_status_text.color = COLORS['error']
             
@@ -789,7 +792,7 @@ class DashboardPage:
         try:
             self.page.update()
         except Exception as e:
-            print(f"Safe update failed (expected if page closed): {e}")
+            logger.debug(f"Safe update failed: {e}")
     
     def _reset_batch_button(self):
         """Reset the batch button to Start state."""
