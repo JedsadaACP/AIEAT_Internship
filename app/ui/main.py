@@ -5,8 +5,11 @@ Flet UI Entry Point
 import flet as ft
 import sys
 import os
+import logging
 
 from app.ui.theme import COLORS, APP_CONFIG
+
+logger = logging.getLogger(__name__)
 from app.ui.components.sidebar import create_sidebar
 from app.ui.components.topbar import TopBar
 from app.ui.pages.dashboard import DashboardPage
@@ -37,7 +40,9 @@ class AIEATApp:
         self.page.window.height = 800
         
         # Preload AI model in background (non-blocking)
-        self.page.run_task(self.api.preload_model)
+        async def _preload():
+            self.api.preload_model()
+        self.page.run_task(_preload)
         
         # Check if Ollama is running
         try:
@@ -163,7 +168,7 @@ class AIEATApp:
                 try:
                     logic.refresh_state()
                 except Exception as e:
-                    print(f"Style refresh error: {e}")
+                    logger.warning(f"Style refresh error: {e}")
                 return self.page_cache['style_view']
             else:
                 logic = StylePage(self.page, self.api)
@@ -172,11 +177,6 @@ class AIEATApp:
                 self.page_cache['style_view'] = view
                 return view
                 
-        elif self.current_route == 'log':
-            return ft.Container(
-                padding=40,
-                content=ft.Text("Logs - Coming Soon", size=24)
-            )
         elif self.current_route == 'about':
             return AboutPage(self.page).build()
         else:

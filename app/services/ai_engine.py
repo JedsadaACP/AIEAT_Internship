@@ -440,8 +440,6 @@ class InferenceController:
         
         try:
             # Use Chat API (better for Instruct models like Typhoon/Qwen)
-            print(f"DEBUG: Sending request to Ollama (timeout=300s)... Model: {self.llm}")
-            
             # Construct messages
             messages = [
                 {"role": "user", "content": prompt}
@@ -453,7 +451,6 @@ class InferenceController:
                 temperature=0.2,
                 timeout=300  # 5 minutes for longer translations
             )
-            print(f"DEBUG: Response received (len={len(text)} chars)")
             
             # Parse using new JSON-based parser
             result = parse_translation_response(text)

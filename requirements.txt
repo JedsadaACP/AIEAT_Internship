@@ -1,0 +1,14 @@
+flet
+requests
+aiohttp
+feedparser
+beautifulsoup4
+certifi
+trafilatura
+newspaper3k
+lxml
+justext
+courlan
+htmldate
+python-dateutil
+Pillow
