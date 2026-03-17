@@ -106,19 +106,13 @@ check_tables.py
 check_tags.py
 nul
 
-# Agent/AI working files
-.gemini/
-.agent/
-.agents/
-_agent/
-_agents/
-installer_output - Copy/AIEAT_Portable.zip
-HANDOFF.md
+# Internal documentation
 AGENTS.md
-task.md.resolved
-AGENTS.md
-task_final_sprint.md
-AGENTS.md
+HANDOFF_MAR14.md
+Sprint_Plan_Final.md
+UAT_User_Scenario_Script.md
+UAT_import_template.csv
+tasks/
 
 # Archive and artifacts
 archive/
