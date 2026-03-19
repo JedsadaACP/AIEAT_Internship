@@ -38,6 +38,8 @@
 
 ### Standard Installation
 1. Double-click **`AIEAT_Setup.exe`**.
+   - ⚠️ **Note (Windows SmartScreen):** As this is an indie open-source release without a paid code-signing certificate, Windows SmartScreen may show a blue **"Windows protected your PC"** warning. 
+   - To bypass this, simply click **"More info"**, and then click **"Run anyway"**.
 2. Follow the on-screen wizard - accept the default install path unless you have a reason to change it.
 3. On the **"AI Engine"** screen, you will see:
 
@@ -257,6 +259,37 @@ After scraping, you may have 20-100+ articles. The AI scoring step ranks them by
 | Translate article | Detail page -> Translate button |
 | Change AI style | Style Settings (left sidebar) |
 | Check error logs | `logs/app.log` in installation folder |
+
+---
+
+## Managing Your Data
+**Data Location:** All articles and configurations are stored locally in a single SQLite file at `data/aieat_news.db` within your installation folder.  
+**Backup/Restore:** To backup your data, simply copy the `aieat_news.db` file. To restore, replace the file with your backup.
+
+## Privacy & Security
+AIEAT is a **100% local-first application**. 
+- All articles scraped remain on your machine.
+- AI scoring and translation are performed locally using the Ollama engine. 
+- **Zero data** is sent to cloud APIs, OpenAI, or external servers.
+
+## Known Limitations & Performance
+- **Site Blocking:** Some news websites use advanced anti-bot protection (Cloudflare, etc.) or require a login. The scraper cannot bypass these. If a site consistently yields 0 articles, try finding its RSS feed.
+- **Model Size & Speed:** The Typhoon 2.5 model is resource-intensive. On standard laptops without a dedicated GPU, generating a full translation may take a minute or more.
+- **Source Limits:** For optimal performance, limit each profile to 10-15 high-quality sources.
+
+## Updates & Uninstallation
+- **Updates:** Download the latest `AIEAT_Setup.exe` from the GitHub Releases page and install it over your existing directory to upgrade. Your `data` folder will not be overwritten.
+- **Uninstall:** Navigate to Windows Settings -> Apps -> AIEAT News Dashboard and click Uninstall. *Note: this will delete your database unless you back it up first.*
+
+## Accessibility
+AIEAT's interface supports standard keyboard navigation (Tab/Shift-Tab) and is designed with high-contrast UI elements suitable for modern monitors.
+
+---
+
+## Support and Contact
+If you encounter issues that are not covered in the Troubleshooting section or the `logs/app.log` file, please:
+- Open an issue on our GitHub repository.
+- Include the relevant errors from your `logs/app.log` file in your report.
 
 ---
 
