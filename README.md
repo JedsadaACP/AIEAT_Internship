@@ -6,6 +6,11 @@
 
 A local-first news intelligence dashboard that scrapes, scores, and translates articles using a local AI engine. No cloud dependency — everything runs on your machine.
 
+## 📚 Documentation
+For detailed setup instructions, troubleshooting, and best practices, please refer to our comprehensive user manuals:
+- 📖 **[English User Manual](./User_Manual.md)**
+- 🇹🇭 **[คู่มือการใช้งานภาษาไทย (Thai Manual)](./User_Manual_TH.md)**
+
 ## What It Is
 
 AIEAT is designed for content writers, social media managers, and news analysts who need to:
@@ -22,20 +27,18 @@ AIEAT is designed for content writers, social media managers, and news analysts 
 - **74+ Configurable News Sources** — Add or remove sources easily
 - **Windows Installer** — Optional Ollama setup during installation
 
-## Installation
+## System Requirements
 
-1. Download `AIEAT_Setup.exe` from the [GitHub Releases](https://github.com/JedsadaACP/AIEAT_Internship/releases) page
-2. Run the installer
-3. Optionally install Ollama during setup (recommended for AI features)
+- **OS:** Windows 10 / 11 (64-bit)
+- **RAM:** Minimum 8 GB (16+ GB recommended for local AI models)
+- **Disk Space:** 5 GB minimum (for application and offline AI models)
 
-## Quick Start
+## Quick Start Installation
 
-1. Launch the app
-2. Select a profile (or create a new one)
-3. Add news sources and set keywords
-4. Click **Scrape** to fetch articles
-5. Click **Batch Score** to run AI scoring
-6. Review and translate articles
+1. Download **`AIEAT_Setup.exe`** from the [GitHub Releases](https://github.com/JedsadaACP/AIEAT_Internship/releases) page.
+2. Double-click to run the installer.
+   > ⚠️ **Note (Windows SmartScreen):** As this is an indie open-source release without a paid code-signing certificate, Windows SmartScreen may show a blue "Windows protected your PC" warning. Click **"More info"**, and then click **"Run anyway"**.
+3. Optionally install Ollama during setup (highly recommended for AI scanning and translation).
 
 ## Tech Stack
 
@@ -43,11 +46,16 @@ AIEAT is designed for content writers, social media managers, and news analysts 
 |-----------|------------|
 | UI Framework | Python + Flet |
 | Database | SQLite |
-| AI Engine | Ollama (Typhoon 2.5 model) |
+| AI Engine | Ollama (Typhoon 2.5 local model) |
 
 ## Contributing
 
-Contributions are welcome! Please read our [Contributing Guide](./CONTRIBUTING.md) for setup instructions and code standards.
+Contributions are welcome! Please read our [Contributing Guide](./CONTRIBUTING.md) for setup instructions, code standards, and how to verify your changes.
+
+## Support & Contact
+
+- **Issues & Support:** Please open an issue on our [GitHub Issues](https://github.com/JedsadaACP/AIEAT_Internship/issues) page.
+- **Security:** If you find a security vulnerability, please refer to our [Security Policy](./SECURITY.md) privately.
 
 ## License
 
