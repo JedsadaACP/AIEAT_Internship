@@ -33,9 +33,9 @@ class AboutPage:
                                 size=18, weight=ft.FontWeight.BOLD),
                         ft.Container(height=10),
                         
-                        self._info_row("Version", "1.0.0-beta"),
+                        self._info_row("Version", "1.0.0"),
                         self._info_row("Built With", "Flet + Ollama + SQLite"),
-                        self._info_row("AI Models", "Typhoon 2.5, Gemma"),
+                        self._info_row("AI Models", "Typhoon 2.5"),
                         self._info_row("Purpose", "News aggregation, scoring, and Thai translation"),
                         
                         ft.Container(height=15),

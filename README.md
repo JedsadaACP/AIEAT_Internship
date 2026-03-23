@@ -3,6 +3,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue)](https://www.python.org/)
 [![Flet](https://img.shields.io/badge/Flet-UI-purple)](https://flet.dev/)
+[![Downloads](https://img.shields.io/github/downloads/JedsadaACP/AIEAT_Internship/total)](https://github.com/JedsadaACP/AIEAT_Internship/releases)
 
 A local-first news intelligence dashboard that scrapes, scores, and translates articles using a local AI engine. No cloud dependency — everything runs on your machine.
 
