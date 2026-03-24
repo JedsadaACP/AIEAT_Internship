@@ -21,7 +21,7 @@ COLORS = {
 
 # App Configuration
 APP_CONFIG = {
-    'title': 'A.I. News Dashboard',
+    'title': 'AIEAT News Dashboard',
     'version': 'v1.0.0',
     'sidebar_width': 180,
     'default_page_size': 10,

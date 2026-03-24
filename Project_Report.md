@@ -1,7 +1,7 @@
-# Project Report: AIEAT — AI-Enhanced Article Tracker
+# Project Report: AIEAT News Dashboard
 
 **Developer:** Jedsada Artchomphoo (Intern)  
-**Project:** AIEAT — AI-Enhanced Article Tracker  
+**Project:** AIEAT News Dashboard  
 **Duration:** December 2025 — March 2026 (5 months)  
 **Status:** v1.0.0
 
@@ -9,7 +9,7 @@
 
 ## 1. Project Overview
 
-AIEAT (AI-Enhanced Article Tracker) is a local-first news intelligence dashboard developed to provide secure, offline-capable news monitoring and analysis. Built using Python and the Flet framework, the application automates the process of gathering news from over 74 configurable sources.
+AIEAT News Dashboard is a local-first news intelligence dashboard developed to provide secure, offline-capable news monitoring and analysis. Built using Python and the Flet framework, the application automates the process of gathering news from over 74 configurable sources.
 
 The system differentiates itself through a "zero-cloud" dependency model. All data processing, including relevance scoring and Thai language translation, is performed locally on the user's hardware. This is achieved by integrating the Typhoon 2.5 Large Language Model via Ollama for local inference. By eliminating external API dependencies, AIEAT ensures total data privacy and operational continuity without an active internet connection after the initial scraping phase.
 

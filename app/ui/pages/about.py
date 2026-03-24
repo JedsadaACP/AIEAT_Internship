@@ -29,7 +29,7 @@ class AboutPage:
                     bgcolor=COLORS['card_bg'],
                     border_radius=8,
                     content=ft.Column([
-                        ft.Text("AIEAT - AI-Enhanced Article Translator", 
+                        ft.Text("AIEAT News Dashboard", 
                                 size=18, weight=ft.FontWeight.BOLD),
                         ft.Container(height=10),
                         

@@ -1,4 +1,4 @@
-# AIEAT - AI-Enhanced Article Tracker v1.0.0
+# AIEAT News Dashboard v1.0.0
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue)](https://www.python.org/)

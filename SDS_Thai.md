@@ -1,5 +1,5 @@
 # เอกสารข้อกำหนดการออกแบบซอฟต์แวร์ (Software Design Specification)
-# ระบบ AIEAT — AI-Enhanced Article Tracker
+# ระบบ AIEAT News Dashboard
 
 **เวอร์ชัน:** 1.0  
 **วันที่:** 23 มีนาคม 2569  
@@ -23,7 +23,7 @@
 
 ### 1.1 วัตถุประสงค์ของระบบ
 
-AIEAT (AI-Enhanced Article Tracker) เป็น**ระบบกระดานข่าวอัจฉริยะ**ที่ออกแบบมาให้ทำงานบนเครื่องของผู้ใช้ 100% โดยไม่จำเป็นต้องเชื่อมต่อกับ Cloud Service ใดๆ ระบบนี้ถูกพัฒนาขึ้นเพื่อตอบโจทย์องค์กรที่ต้องการ:
+AIEAT News Dashboard เป็น**ระบบกระดานข่าวอัจฉริยะ**ที่ออกแบบมาให้ทำงานบนเครื่องของผู้ใช้ 100% โดยไม่จำเป็นต้องเชื่อมต่อกับ Cloud Service ใดๆ ระบบนี้ถูกพัฒนาขึ้นเพื่อตอบโจทย์องค์กรที่ต้องการ:
 
 - **ความเป็นส่วนตัวของข้อมูล** — ข้อมูลทั้งหมดถูกประมวลผลและจัดเก็บในเครื่องของผู้ใช้เท่านั้น ไม่มีการส่งข้อมูลไปยัง Server ภายนอก
 - **ความเป็นอิสระจาก Internet** — หลังจากดึงข่าวมาแล้ว ผู้ใช้สามารถอ่าน วิเคราะห์ และแปลข่าวได้โดยไม่ต้องเชื่อมต่อ Internet
@@ -1104,7 +1104,7 @@ def upsert_article(self, article: dict) -> int:
 ```python
 # main.py
 def main(page: ft.Page):
-    page.title = "AIEAT - AI-Enhanced Article Tracker"
+    page.title = "AIEAT News Dashboard"
     page.theme = theme.get_theme()
     
     def route_change(e):
@@ -1339,7 +1339,7 @@ coll = COLLECT(
 ```iss
 ; installer.iss
 [Setup]
-AppName=AIEAT - AI-Enhanced Article Tracker
+AppName=AIEAT News Dashboard
 AppVersion=1.0.0
 DefaultDirName={autopf}\AIEAT
 DefaultGroupName=AIEAT

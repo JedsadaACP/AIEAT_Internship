@@ -2,7 +2,7 @@
 
 **Version:** 1.0.0 | **Last Updated:** March 2026
 
-> AIEAT (AI-Enhanced Article Tool) is a local-first news intelligence dashboard. All AI processing runs on your own machine - no data is sent to the cloud.
+> AIEAT News Dashboard is a local-first news intelligence dashboard. All AI processing runs on your own machine - no data is sent to the cloud.
 
 ---
 
