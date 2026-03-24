@@ -11,6 +11,8 @@ A local-first news intelligence dashboard that scrapes, scores, and translates a
 For detailed setup instructions, troubleshooting, and best practices, please refer to our comprehensive user manuals:
 - 📖 **[English User Manual](./User_Manual.md)**
 - 🇹🇭 **[คู่มือการใช้งานภาษาไทย (Thai Manual)](./User_Manual_TH.md)**
+- 📋 **[Project Report](./Project_Report.md)**
+- 📐 **[Software Design Specification (Thai)](./SDS_Thai.md)**
 
 ## What It Is
 
