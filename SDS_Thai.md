@@ -302,13 +302,13 @@ AIEAT_Internship/
 
 ```sql
 INSERT INTO master_status (status_id, status_name, status_group, description) VALUES
-('Active', 'General', 'Item is active and usable'),
-('Inactive', 'General', 'Item is disabled'),
-('New', 'Article', 'Just scraped, waiting for score'),
-('Scored', 'Article', 'AI has assigned a score'),
-('Translated', 'Article', 'Translation complete'),
-('Online', 'Source', 'Website is reachable'),
-('Offline', 'Source', 'Website is down');
+(1, 'Active', 'General', 'Item is active and usable'),
+(2, 'Inactive', 'General', 'Item is disabled'),
+(3, 'New', 'Article', 'Just scraped, waiting for score'),
+(4, 'Scored', 'Article', 'AI has assigned a score'),
+(5, 'Translated', 'Article', 'Translation complete'),
+(6, 'Online', 'Source', 'Website is reachable'),
+(7, 'Offline', 'Source', 'Website is down');
 ```
 
 ---
@@ -665,7 +665,7 @@ def extract_content(html: str, url: str) -> dict:
     
     # Fallback: newspaper3k
     article = Article(url)
-    article.download(html)
+    article.set_html(html)
     article.parse()
     if article.text and len(article.text) > 200:
         return {"content": article.text, "extractor": "newspaper3k"}
