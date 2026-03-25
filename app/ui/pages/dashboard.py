@@ -936,11 +936,11 @@ class DashboardPage:
             
             # Date filter
             if self.filter_date_range == "today":
-                sql += " AND DATE(m.published_at) >= DATE('now', '-1 day')"
+                sql += " AND DATE(COALESCE(m.published_at, m.created_at)) >= DATE('now', '-1 day')"
             elif self.filter_date_range == "week":
-                sql += " AND DATE(m.published_at) >= DATE('now', '-7 days')"
+                sql += " AND DATE(COALESCE(m.published_at, m.created_at)) >= DATE('now', '-7 days')"
             elif self.filter_date_range == "month":
-                sql += " AND DATE(m.published_at) >= DATE('now', '-30 days')"
+                sql += " AND DATE(COALESCE(m.published_at, m.created_at)) >= DATE('now', '-30 days')"
             
             # Score filter
             if self.filter_score == "high":
@@ -1312,13 +1312,11 @@ class DashboardPage:
     
     def _get_articles_for_page(self, page_num):
         """Check if a page has articles (for pagination limit)."""
-        import sqlite3
-        db_path = "data/aieat_news.db"
-        with sqlite3.connect(db_path) as conn:
-            conn.row_factory = sqlite3.Row
+        with self.api.db.get_connection() as conn:
             offset = page_num * self.page_size
             cursor = conn.execute(
-                f"SELECT article_id FROM articles_meta LIMIT {self.page_size} OFFSET {offset}"
+                "SELECT article_id FROM articles_meta WHERE profile_id = ? LIMIT ? OFFSET ?",
+                (self.api.db._get_active_profile_id(), self.page_size, offset)
             )
             return cursor.fetchone() is not None
     
