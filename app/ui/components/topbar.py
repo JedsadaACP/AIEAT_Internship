@@ -1,4 +1,5 @@
 import flet as ft
+from app.ui.theme import APP_CONFIG
 from app.services.backend_api import BackendAPI
 
 class TopBar(ft.Container):
@@ -12,7 +13,7 @@ class TopBar(ft.Container):
         self.padding = ft.padding.only(top=10, right=20, bottom=10)
         self.content = ft.Row(
             controls=[
-                ft.Text("AIEAT Dashboard", size=20, weight="bold", expand=True),
+                ft.Text(APP_CONFIG['title'], size=20, weight="bold", expand=True),
                 self.profile_btn
             ],
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN

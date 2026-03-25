@@ -46,7 +46,7 @@ def create_sidebar(page: ft.Page, current_route: str, on_navigate, api=None):
                 ft.Container(
                     padding=ft.padding.only(left=15, top=20, bottom=20),
                     content=ft.Text(
-                        "A.I. News",
+                        APP_CONFIG['title'],
                         size=22,
                         weight=ft.FontWeight.BOLD,
                         color=ft.Colors.WHITE

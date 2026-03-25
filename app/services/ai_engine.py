@@ -240,14 +240,6 @@ class InferenceController:
                 return 35  # Use GPU for most layers
         except ImportError:
             pass
-        
-        # Check for llama-cpp CUDA support
-        try:
-            from llama_cpp import llama_supports_gpu_offload
-            if llama_supports_gpu_offload():
-                return 35
-        except:
-            pass
             
         logger.info("Using CPU mode")
         return 0  # CPU only

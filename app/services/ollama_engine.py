@@ -210,7 +210,7 @@ class OllamaController:
         if content is None:
             if article_id is None:
                 raise ValueError("Must provide article_id or content")
-            article = self.db.get_article_content(article_id)
+            article = self.db.get_article_by_id(article_id)
             if not article:
                 raise ValueError(f"Article {article_id} not found")
             content = article.get('original_content', '')
