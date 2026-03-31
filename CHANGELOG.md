@@ -17,6 +17,10 @@ All notable changes to AIEAT are documented here. Format follows [Keep a Changel
 - Removed incorrect "Gemma" model reference from About page
 - Upgraded README with system requirements, support section, and SmartScreen instructions
 
+### Security
+- Identified and remediated SQL injection risk in `database_manager.py`: converted dynamic f-string date filters to parameterized SQLite queries (`?` placeholders) for defense-in-depth
+- Hardened AI translation prompt in `prompt_builder.py` with strict anti-hallucination and anti-transliteration rules to prevent technical term corruption
+
 ## [0.1.0-beta] - 2026-03-18
 
 ### Added

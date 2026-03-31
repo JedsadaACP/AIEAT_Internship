@@ -108,7 +108,7 @@ The system differentiates itself through a "zero-cloud" dependency model. All da
 
 ## 6. Results & Metrics
 
-*   **Codebase:** 31 Python source files organized into 4 core packages (`services`, `ui`, `utils`, `config`).
+*   **Codebase:** ~21 Python source files organized into 4 core packages (`services`, `ui`, `utils`, `config`).
 *   **Data Structure:** 11-table SQLite database populated with comprehensive seed data.
 *   **Coverage:** 74+ pre-configured news sources integrated across 3 default profiles.
 *   **Extensibility:** 3 fully customizable AI translation styles.
@@ -116,7 +116,17 @@ The system differentiates itself through a "zero-cloud" dependency model. All da
 
 ---
 
-## 7. Lessons Learned
+## 7. Security & Code Quality Audit
+
+A pre-release static code audit was conducted on the entire codebase prior to the v1.0.0 release:
+
+*   **SQL Injection Remediation:** Dynamic string interpolation (Python f-strings) in `database_manager.py` date-filtering queries was identified as a potential injection vector. All affected methods were refactored to use strictly parameterized SQLite execution (`?` placeholders), eliminating the risk.
+*   **AI Prompt Hardening:** The translation prompt in `prompt_builder.py` was overhauled with anti-hallucination constraints and strict anti-transliteration rules to prevent the local LLM from corrupting technical terminology and proper nouns during Thai translation.
+*   **Dead Code Removal:** Banned dependencies (`llama-cpp-python`) and 3 unused legacy modules were purged from the codebase to reduce attack surface and executable size.
+
+---
+
+## 8. Lessons Learned
 
 ### Asynchronous Programming in Python
 The transition from synchronous prototypes to an asynchronous production environment highlighted the necessity of non-blocking I/O for desktop applications. Managing the lifecycle of multiple concurrent scrapers alongside a reactive UI requires disciplined use of `asyncio` and framework-specific task runners to avoid race conditions and deadlocks.

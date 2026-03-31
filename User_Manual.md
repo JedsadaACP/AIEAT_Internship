@@ -188,7 +188,7 @@ After scraping, you may have 20-100+ articles. The AI scoring step ranks them by
 
 ### Exporting Data
 - If your build includes an Export button on the Dashboard, you can export scored articles directly from there.
-- For bulk data analysis, the raw database is located at `data/aieat.db` in your installation folder. It is a standard SQLite file readable by any SQL browser.
+- For bulk data analysis, the raw database is located at `data/aieat_news.db` in your installation folder. It is a standard SQLite file readable by any SQL browser.
 
 ---
 
