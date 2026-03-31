@@ -41,14 +41,30 @@
    - ⚠️ **Note (Windows SmartScreen):** As this is an indie open-source release without a paid code-signing certificate, Windows SmartScreen may show a blue **"Windows protected your PC"** warning. 
    - To bypass this, simply click **"More info"**, and then click **"Run anyway"**.
 2. Follow the on-screen wizard - accept the default install path unless you have a reason to change it.
+
+   ![Destination Location](docs/images/ANN_01_INSTALLER.png)
+   *Figure 1: Destination Location*
+   ① Installation path input field
+   ② Next button
+
 3. On the **"AI Engine"** screen, you will see:
 
    > [ ] **Install Ollama AI Engine + Typhoon 2.5 Model**
 
    **Check this box.** This downloads the local AI model (~3-4 GB) that powers scoring and translation. Without it, those features will not work.
 
-4. Wait for both the app and the model to finish installing. The "Installing Typhoon 2.5..." step can take 5-10 minutes depending on your internet speed.
-5. Click **Finish**. AIEAT is now ready.
+4. Review the installation summary and click **Install**.
+
+   ![AI Engine Installation](docs/images/ANN_02_INSTALLER_OLLAMAOPTIONAL.png)
+   *Figure 2: AI Engine Selection*
+   ① AI Engine installation checkbox
+   ② Next button
+
+   ![Ready to Install](docs/images/ANN_03_READY_TO_INSTALL.png)
+   *Figure 3: Ready to Install*
+   ① Install button
+
+5. Wait for both the app and the model to finish installing. The "Installing Typhoon 2.5..." step can take 5-10 minutes depending on your internet speed. Click **Finish**. AIEAT is now ready.
 
 > **Note:** If you skipped the Ollama checkbox and want to install it later, run `Install_AI_Engine.bat` in the AIEAT installation folder.
 
@@ -75,9 +91,22 @@ You can switch profiles at any time from the top-right Profile button. The dashb
 
 ### Step 1: Launch & Select Your Profile
 
-1. Open **AIEAT** from your desktop shortcut.
+1. Open **AIEAT** from your desktop shortcut. The fresh dashboard will appear.
+
+   ![Fresh Dashboard](docs/images/ANN_04_FRESH_DASHBOARD.png)
+   *Figure 4: Fresh Dashboard Interface*
+   ① Sidebar navigation menu
+   ② Top navigation bar
+   ③ Main content area
+
 2. In the **top-right corner**, click the **Profile** button.
 3. Select **Profile 2: Finance & Markets** from the dropdown.
+
+   ![Profile Selection](docs/images/ANN_05_PROFILE.png)
+   *Figure 5: Profile Management*
+   ① Profile selection dropdown
+   ② New Profile button
+
 4. The dashboard will reload - you are now working entirely within the Finance profile. All scrapes, scores, and articles are stored separately for this profile.
 
 ---
@@ -104,6 +133,13 @@ You can switch profiles at any time from the top-right Profile button. The dashb
 
 5. To remove a source, click the **trash icon** next to it.
 
+   ![News Sources Configuration](docs/images/ANN_06_CONFIG.png)
+   *Figure 6: Source Configuration*
+   ① RSS URL input field
+   ② Add Source button
+   ③ Import File button
+   ④ Configured source list
+
 > **Pro-tip:** Quality matters more than quantity. 10 focused sources give better results than 50 random ones.
 
 ---
@@ -116,7 +152,13 @@ You can switch profiles at any time from the top-right Profile button. The dashb
 2. Add keywords relevant to your profile. For Finance, examples include:
    - `Stock Market`, `Revenue`, `Acquisition`, `GDP`, `Interest Rate`, `Earnings`
 3. Each keyword you add acts as an OR filter - an article is saved if it contains **any** of your keywords.
-4. Keywords are saved automatically as you add them.
+4. Keywords are saved automatically as you add them. You can also specify a translation threshold and save configuration.
+
+   ![Keyword Configuration](docs/images/ANN_07_CONFIG_BUTTOM_PART.png)
+   *Figure 7: Keyword and Threshold Configuration*
+   ① Configured keyword tags
+   ② Keyword input field
+   ③ Save Configuration button
 
 > **Tip:** Start with 5-10 broad keywords, then refine based on what articles you actually get.
 
@@ -125,9 +167,14 @@ You can switch profiles at any time from the top-right Profile button. The dashb
 ### Step 4: Run the Scraper
 
 1. Click **Dashboard** in the left sidebar to return to the main screen.
-2. Click the blue **Start Scraping** button in the left sidebar.
+2. Click the green **Start Scraper** button in the bottom right corner (changes to red STOP SCRAPER when active).
 3. The scraper will visit each of your news sources and attempt to extract article text.
-4. Watch the **progress bar** at the bottom-left of the screen - it updates as each source is processed.
+4. Watch the status bar at the top right of the dashboard content - it updates as each source is processed.
+
+   ![Active Scraping](docs/images/ANN_08_START_SCRRAPING.png)
+   *Figure 8: Active Scraping Process*
+   ① Stop Scraper button
+   ② Scraping progress indicator
 
 **What happens during scraping:**
 - The scraper fetches each article's full text
@@ -150,6 +197,12 @@ After scraping, you may have 20-100+ articles. The AI scoring step ranks them by
 3. Once scoring is complete, click **Filter** in the top bar of the Dashboard.
 4. Set the filter to **"High Relevance (5+)"** to show only the most important articles.
 
+   ![Dashboard After Scrape](docs/images/ANN_10_DASHBOARD_AFTER_SCRAPE.png)
+   *Figure 9: Scored Dashboard View*
+   ① Article tags and score indicators
+   ② View article details button
+   ③ Batch Score button
+
 **Score guide:**
 | Score | Meaning |
 |-------|---------|
@@ -163,9 +216,23 @@ After scraping, you may have 20-100+ articles. The AI scoring step ranks them by
 
 1. In the filtered dashboard, click **View Detail** on the article you want to read.
 2. The detail page shows the full article text, source, and its AI score.
-3. Click the **Translate** button at the top of the detail page.
+
+   ![Article Details Before Translation](docs/images/ANN_11_DETAILS_BEFORE.png)
+   *Figure 10: Article Details View*
+   ① Article headline
+   ② Translate button
+   ③ Current relevance score
+   ④ Translate Now button
+
+3. Click the **Translate Now** button at the right side of the detail page.
 4. The Typhoon AI will translate the full article into professional Thai.
-5. The translated text appears below the original - both are shown together for reference.
+5. The translated text appears in the Output section - both original and translation are shown together for reference.
+
+   ![Article Details After Translation](docs/images/ANN_DETAILS_AFTER.png)
+   *Figure 11: Translated Output View*
+   ① Updated relevance score
+   ② Regenerate Score button
+   ③ Translated content output
 
 > Done. **You have now gone from 0 to a scored, translated, daily briefing - fully local and private.**
 
@@ -184,6 +251,14 @@ After scraping, you may have 20-100+ articles. The AI scoring step ranks them by
 ### Changing the AI Style
 1. Click **Style Settings** in the sidebar.
 2. You can adjust how the AI writes its scores and translations - for example, formal vs. conversational, detailed vs. concise.
+
+   ![Style Settings](docs/images/ANN_09_STYLE.png)
+   *Figure 12: Style Configuration*
+   ① Style preset selection
+   ② Template and format configuration
+   ③ Included sections configuration
+   ④ Save Changes button
+
 3. Changes take effect on the next Batch Score or Translate operation.
 
 ### Exporting Data
