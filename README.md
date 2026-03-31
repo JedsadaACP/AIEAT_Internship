@@ -25,7 +25,7 @@ AIEAT is designed for content writers, social media managers, and news analysts 
 ## Key Features
 
 - **Multi-Profile Article Silos** — Create separate intelligence profiles with custom keywords
-- **AI Relevance Scoring** — Uses Typhoon 2.5 model to score articles 1-10
+- **AI Relevance Scoring** — Uses Typhoon 2.5 model to score articles based on relevance
 - **Thai Translation** — Localized AI translation with customizable styles
 - **74+ Configurable News Sources** — Add or remove sources easily
 - **Windows Installer** — Optional Ollama setup during installation
